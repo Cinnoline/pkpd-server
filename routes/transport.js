@@ -1,34 +1,60 @@
 /** @format */
 
-import express from "express";
+import { Router } from "express";
 import https from "https";
 import mongoose from "mongoose";
 import axios from "axios";
-import cron from "node-cron";
-import dotenv from "dotenv";
 
-// load environment variables
-dotenv.config({ path: "../.gitignore/.env" });
-const DOMAIN = process.env.DUCKDNS_DOMAIN;
-const TOKEN = process.env.DUCKDNS_TOKEN;
-const MONGO_URI = process.env.MONGO_URI;
+// create a router
+const router = Router();
 
-// create an express app
-const app = express();
-// use the express.json middleware
-app.use(express.json());
-// set the port
-const Port = 8880;
+//
+const kmbStopsSchema = new mongoose.Schema(
+  {
+    stop: String,
+    name: String,
+    location: {
+      type: { type: String, enum: ["Point"], required: true },
+      coordinates: { type: [Number], required: true },
+    },
+  },
+  { strict: false }
+);
+kmbStopsSchema.index({
+  location: "2dsphere",
+});
+const kmbStop = mongoose.model("transport_kmb_stops", kmbStopsSchema);
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error(`Error: ${err}`));
+router.get("/kmbStops/nearest", async (req, res) => {
+  const { lat, long, limit = 10 } = req.query;
 
-// app.get("/transport")
+  // test query
+  // http://localhost:8880/transport/kmbStops/nearest?lat=22.345435&long=114.19264
 
-// the code to store the data in the database
-app.put("/transport/kmbStops", async (req, res) => {
+  try {
+    const kmbStops = await kmbStop
+      .find({
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(long), parseFloat(lat)],
+            },
+            // $maxDistance: 8000, // 8km
+          },
+        },
+      })
+      .limit(parseInt(limit))
+      .select("stop name");
+
+    res.json(kmbStops);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+router.patch("/transport/kmbStops", async (req, res) => {
   try {
     const response = await axios.get(
       "https://data.etabus.gov.hk/v1/transport/kmb/stop"
@@ -51,8 +77,32 @@ app.put("/transport/kmbStops", async (req, res) => {
   }
 });
 
-// get kmb bus stop data
-app.get("/transportation", (req, res) => {
+// the code to store the data in the database, only map location by property
+router.put("/transport/kmbStops", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://data.etabus.gov.hk/v1/transport/kmb/stop"
+    );
+    const stops = response.data;
+    const mappedStops = stops.data.map((stops) => {
+      return {
+        stop: stops.stop,
+        name: stops.name_en,
+        lat: parseFloat(stops.lat),
+        long: parseFloat(stops.long),
+      };
+    });
+
+    saveToDatabase(mappedStops);
+    res.send(mappedStops);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+// get kmb bus stop data, http get request
+router.get("/transportation", (req, res) => {
   const url = "https://data.etabus.gov.hk/v1/transport/kmb/stop";
 
   https.get(url, (response) => {
@@ -96,6 +146,8 @@ async function saveToDatabase(filteredData) {
   }
 }
 
-app.listen(Port, () => {
-  console.log(`Server is running on Port ${Port}`);
-});
+// app.listen(Port, () => {
+//   console.log(`Server is running on Port ${Port}`);
+// });
+
+export default router;

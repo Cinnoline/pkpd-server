@@ -9,9 +9,10 @@ import { EventEmitter } from "events";
 import dotenv from "dotenv";
 import weatherRouter from "./weather.js";
 import facilitiesRouter from "./facilities.js";
+import transportRouter from "./transport.js";
 
 // load environment variables
-dotenv.config({ path: "../.gitignore/.env" });
+dotenv.config({ path: "../.env" });
 const DOMAIN = process.env.DUCKDNS_DOMAIN;
 const TOKEN = process.env.DUCKDNS_TOKEN;
 const MONGO_URI = process.env.MONGO_URI;
@@ -28,6 +29,7 @@ mongoose
 
 app.use("/weather", weatherRouter); // use the weather router
 app.use("/facilities", facilitiesRouter); // use the facilities router
+app.use("/transport", transportRouter); // use the transport router
 
 // const resolveIndexByUserId = (req, res, next) => {
 //   const {
