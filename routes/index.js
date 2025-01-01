@@ -11,21 +11,13 @@ import weatherRouter from "./weather.js";
 import facilitiesRouter from "./facilities.js";
 import transportRouter from "./transport.js";
 
-// load environment variables
-dotenv.config({ path: "../.env" });
-const DOMAIN = process.env.DUCKDNS_DOMAIN;
-const TOKEN = process.env.DUCKDNS_TOKEN;
-const MONGO_URI = process.env.MONGO_URI;
+// dotenv.config({ path: "../.env" });
+// const MONGO_URI = process.env.MONGO_URI;
+// console.log(MONGO_URI);
 
 const app = express(); // create an express app
 app.use(express.json()); // use the express.json middleware
 const Port = 8880; // set the port
-
-// connect to MongoDB
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error(`Error: ${err}`));
 
 app.use("/weather", weatherRouter); // use the weather router
 app.use("/facilities", facilitiesRouter); // use the facilities router
@@ -95,3 +87,5 @@ app.listen(Port, () => {
   emitter.setMaxListeners(100);
   console.log(`Server is running on Port ${Port}`);
 });
+
+export default app;

@@ -9,6 +9,7 @@ const router = Router();
 
 router.get("/distancePosts/nearest", async (req, res) => {
   const { lat, long, limit = 1 } = req.query;
+  // test query: http://localhost:8880/facilities/distancePosts/nearest?lat=22.3247157&long=114.2109974
   try {
     const latitude = parseFloat(lat);
     const longtitude = parseFloat(long);
@@ -39,6 +40,44 @@ router.get("/distancePosts/nearest", async (req, res) => {
       },
     ]);
     res.json(closestPost);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+router.get("/waterStation/nearest", async (req, res) => {
+  const { lat, long, limit = 1 } = req.query;
+  try {
+    const latitude = parseFloat(lat);
+    const longtitude = parseFloat(long);
+    console.log("Query parameters:", { latitude, longtitude, limit });
+    const closestStation = await WaterStation.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [longtitude, latitude],
+          },
+          distanceField: "distance",
+          spherical: true,
+          // maxDistance: 3000, // 3km
+        },
+      },
+      {
+        $limit: parseInt(limit),
+      },
+      {
+        $project: {
+          _id: 0,
+          FAC_ID: 1,
+          REMARK: 1,
+          coordinates: 1,
+          distance: 1,
+        },
+      },
+    ]);
+    res.json(closestStation);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -81,6 +120,7 @@ router.put("/water_station", async (req, res) => {
     const filteredStation = station.features.map((feature) => {
       const properties = feature.properties;
       const filteredProperties = Object.keys(properties).reduce((acc, key) => {
+        // only keep the properties in English
         if (key.endsWith("_EN")) {
           acc[key] = properties[key];
         }

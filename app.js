@@ -2,13 +2,30 @@
 
 import createError from "http-errors";
 import express, { json, urlencoded, static as serveStatic } from "express";
-import { join } from "path";
+import { join, dirname } from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
 
-import indexRouter from "./routes/index";
+import indexRouter from "./routes/index.js";
 
-var app = express();
+// load environment variables
+dotenv.config({ path: "./.env" });
+const MONGO_URI = process.env.MONGO_URI;
+
+// connect to MongoDB
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error(`Error: ${err}`));
+
+const app = express();
+
+// define the __filename and __dirname
+const __filename = dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(__filename);
 
 // view engine setup
 app.set("views", join(__dirname, "views"));
