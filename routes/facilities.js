@@ -39,7 +39,7 @@ router.get("/distancePosts/nearest", async (req, res) => {
         },
       },
     ]);
-    res.json(closestPost);
+    res.json(closestPost[0]);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -48,6 +48,7 @@ router.get("/distancePosts/nearest", async (req, res) => {
 
 router.get("/waterStation/nearest", async (req, res) => {
   const { lat, long, limit = 1 } = req.query;
+  // test query: http://localhost:8880/facilities/waterStation/nearest?lat=22.3247157&long=114.2109974
   try {
     const latitude = parseFloat(lat);
     const longtitude = parseFloat(long);
@@ -70,14 +71,15 @@ router.get("/waterStation/nearest", async (req, res) => {
       {
         $project: {
           _id: 0,
-          FAC_ID: 1,
-          REMARK: 1,
-          coordinates: 1,
+          coordinates: "$geometry.coordinates",
+          ADDRESS_EN: 1,
+          FACILITY_NAME_EN: 1,
+          COUNTRY_PARK_EN: 1,
           distance: 1,
         },
       },
     ]);
-    res.json(closestStation);
+    res.json(closestStation[0]);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
