@@ -38,32 +38,38 @@ router.put("/geoName", async (req, res) => {
 
 // the code to aggregate PLACE_NAME data with GEO_PLACE_NAME data and store them in the database
 router.put("/placeName", async (req, res) => {
-  // to write
+  // Download: https://portal.csdi.gov.hk/geoportal/?datasetId=landsd_rcd_1648571595120_89752#metadataInfoPanel
   // read the json file
-  const data = JSON.parse(fs.readFileSync("path/to/your/.json", "utf8"));
-  const filteredPlaceName = data.features.map((feature) => {
-    const { geometry, properties } = feature;
-    const { OBJECTID: _id, ...restProperties } = properties;
-    return {
-      _id,
-      geometry,
-      properties: restProperties,
-    };
-  });
+  const data = JSON.parse(
+    fs.readFileSync(
+      "C:\\Users\\Cinnoline\\OneDrive\\Desktop\\S\\PKPD\\Download_data\\PlaceName_GEOJSON.json",
+      "utf8"
+    )
+  );
 
-  await Name.insertMany(
-    data.features.map((feature) => ({
-      type: feature.type,
-      geometry: feature.geometry,
-      properties: feature.properties,
-    }))
-  )
-    .then(() => {
-      console.log("Data inserted");
-    })
-    .catch((error) => {
-      console.error("Error inserting data:", error);
-    });
+  // const filteredPlaceName = data.features.map((feature) => {
+  //   const { geometry, properties } = feature;
+  //   const { OBJECTID: _id, ...restProperties } = properties;
+  //   return {
+  //     _id,
+  //     geometry,
+  //     properties: restProperties,
+  //   };
+  // });
+
+  // await Name.insertMany(
+  //   data.features.map((feature) => ({
+  //     type: feature.type,
+  //     geometry: feature.geometry,
+  //     properties: feature.properties,
+  //   }))
+  // )
+  //   .then(() => {
+  //     console.log("Data inserted");
+  //   })
+  //   .catch((error) => {
+  //     console.error("Error inserting data:", error);
+  //   });
 });
 
 export default router;
