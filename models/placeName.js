@@ -4,15 +4,16 @@ import mongoose from "mongoose";
 
 const placeNameSchema = new mongoose.Schema(
   {
-    type: String,
     geometry: {
-      type: {
-        type: String,
-        enum: ["Point"],
-      },
+      type: { type: String },
       coordinates: [Number],
     },
-    properties: {}, // tbh, I don't know what to put here
+    GEO_NAME_ID: String,
+    NAME_EN: String,
+    NAME_ALIAS: String,
+    PLACE_TYPE: String,
+    DISTRICT: String,
+    PLACE_CLASS: String,
   },
   { strict: false }
 );
