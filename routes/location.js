@@ -9,6 +9,86 @@ import PlaceName from "../models/placeName.js";
 // create a router
 const router = Router();
 
+const distanceThresholds = {
+  Cape: 144,
+  Cave: 16,
+  Hill: 1100,
+  Island: 1000,
+  Pass: 56,
+  Peninsula: 480,
+  Rock: 36,
+  Valley: 260,
+  Area: 1170,
+  Town: 1680,
+  Village: 400,
+  Islands: 1280,
+};
+const sortedPlaceTypes = Object.keys(distanceThresholds).sort(
+  (a, b) => distanceThresholds[b] - distanceThresholds[a]
+);
+router.get("/placeName", async (req, res) => {
+  try {
+    const { lat, long, limit = 1 } = req.query;
+    // test request:
+    // http://localhost:8880/location/placeName?lat=22.3244127&long=114.2109974 // HKUSPACE CC KEC
+    // http://localhost:8880/location/placeName?lat=22.3352102&long=114.1959230 // San Po Kong Plaza
+    // http://localhost:8880/location/placeName?lat=22.2573896&long=114.1994743 // Hong Kong Parkview
+    // http://localhost:8880/location/placeName?lat=22.2150062&long=113.9896682 // Sea Ranch
+    // http://localhost:8880/location/placeName?lat=22.3763815&long=114.0259942 // Tai Lam Chung Reservoir
+    // http://localhost:8880/location/placeName?lat=22.2292117&long=114.2510047 // Shek O Beach
+    // http://localhost:8880/location/placeName?lat=22.4313971&long=114.3762213 // Sharp Peak
+    // http://localhost:8880/location/placeName?lat=22.4122522&long=114.1167129 // Tai Mo Shan Lookout
+    // http://localhost:8880/location/placeName?lat=22.4250105&long=114.3535866 // Chek Keng Pier
+    // http://localhost:8880/location/placeName?lat=22.4153040&long=114.3011849 // MacLehose Trail Section 3 near M061 post
+    if (!long || !lat) {
+      return res.status(400).send("Missing query parameters");
+    }
+    const latitude = parseFloat(lat);
+    const longtitude = parseFloat(long);
+    console.log("Query parameters:", { latitude, longtitude, limit });
+    const results = [];
+    for (const placeType of sortedPlaceTypes) {
+      const distanceThreshold = distanceThresholds[placeType];
+      const places = await PlaceName.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [longtitude, latitude],
+            },
+            distanceField: "distance",
+            maxDistance: distanceThreshold,
+            spherical: true,
+            query: { PLACE_TYPE: placeType },
+          },
+        },
+        {
+          $limit: parseInt(limit),
+        },
+      ]);
+      if (places.length > 0) {
+        const place = places[0];
+        const name = place.NAME_ALIAS
+          ? `${place.NAME_EN} (${place.NAME_ALIAS})`
+          : place.NAME_EN;
+        console.log(
+          "Type:",
+          placeType,
+          "Name:",
+          name,
+          "Distance:",
+          place.distance
+        );
+        results.push(name);
+      }
+    }
+    res.status(200).json(results);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
 // the code to store the GEO_PLACE_NAME data in the database
 router.put("/geoName", async (req, res) => {
   try {
@@ -82,14 +162,14 @@ router.put("/placeName", async (req, res) => {
           NAME_EN: feature.properties.NAME_EN,
           NAME_ALIAS: !aliasFeature ? null : aliasFeature.properties.NAME_EN,
           DISTRICT: geoMatch.properties.DISTRICT,
-          PlACE_TYPE: geoMatch.properties.PLACE_TYPE,
+          PLACE_TYPE: geoMatch.properties.PLACE_TYPE,
           PLACE_CLASS: geoMatch.properties.PLACE_CLASS,
         };
         placeNameData.push(placeName);
       }
     });
     res.json(placeNameData);
-    await PlaceName.insertMany(transformedData);
+    await PlaceName.insertMany(placeNameData);
     console.log("Data transformation and aggregation complete!");
   } catch (err) {
     console.error(err);

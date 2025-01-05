@@ -18,6 +18,8 @@ const placeNameSchema = new mongoose.Schema(
   { strict: false }
 );
 
+placeNameSchema.index({ geometry: "2dsphere" });
+
 const PlaceName = mongoose.model("location_place_names", placeNameSchema);
 
 export default PlaceName;
