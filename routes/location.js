@@ -5,23 +5,45 @@ import axios from "axios";
 import GeoName from "../models/geoName.js";
 import fs from "fs";
 import PlaceName from "../models/placeName.js";
+import GPSData from "../models/gpsData.js";
 
 // create a router
 const router = Router();
 
+const districtNames = {
+  SK: "Sai Kung",
+  STH: "Southern",
+  ST: "Sha Tin",
+  NTH: "North",
+  YL: "Yuen Long",
+  WC: "Wan Chai",
+  TP: "Tai Po",
+  TW: "Tsuen Wan",
+  ILD: "Islands",
+  KC: "Kwai Tsing",
+  KT: "Kwun Tong",
+  KLC: "Kowloon City",
+  EST: "Eastern",
+  CW: "Central and Western",
+  SSP: "Sham Shui Po",
+  WTS: "Wong Tai Sin",
+  YTM: "Yau Tsim Mong",
+  TM: "Tuen Mun",
+};
+
 const distanceThresholds = {
   Cape: 144,
-  Cave: 16,
-  Hill: 1100,
-  Island: 1000,
+  Cave: 18,
+  Hill: 1110,
+  Island: 1680,
   Pass: 56,
-  Peninsula: 480,
+  Peninsula: 840,
   Rock: 36,
   Valley: 260,
   Area: 1170,
-  Town: 1680,
+  Town: 1860,
   Village: 400,
-  Islands: 1280,
+  Islands: 1800,
 };
 const sortedPlaceTypes = Object.keys(distanceThresholds).sort(
   (a, b) => distanceThresholds[b] - distanceThresholds[a]
@@ -39,25 +61,28 @@ router.get("/placeName", async (req, res) => {
     // http://localhost:8880/location/placeName?lat=22.4313971&long=114.3762213 // Sharp Peak
     // http://localhost:8880/location/placeName?lat=22.4122522&long=114.1167129 // Tai Mo Shan Lookout
     // http://localhost:8880/location/placeName?lat=22.4250105&long=114.3535866 // Chek Keng Pier
-    // http://localhost:8880/location/placeName?lat=22.4153040&long=114.3011849 // MacLehose Trail Section 3 near M061 post
+    // http://localhost:8880/location/placeName?lat=22.4153040&long=114.3011849 // Maclehose Trail Section 3 near M061 post
+    // http://localhost:8880/location/placeName?lat=22.2009033&long=114.0175582 // Cheung Po Tsai Cave
     if (!long || !lat) {
       return res.status(400).send("Missing query parameters");
     }
     const latitude = parseFloat(lat);
-    const longtitude = parseFloat(long);
-    console.log("Query parameters:", { latitude, longtitude, limit });
+    const longitude = parseFloat(long);
+    console.log("Query parameters:", { latitude, longitude, limit });
     const results = [];
+    const allPlaces = [];
+    let closestPlace = null;
+
+    // query the closest one for all place types
     for (const placeType of sortedPlaceTypes) {
-      const distanceThreshold = distanceThresholds[placeType];
       const places = await PlaceName.aggregate([
         {
           $geoNear: {
             near: {
               type: "Point",
-              coordinates: [longtitude, latitude],
+              coordinates: [longitude, latitude],
             },
             distanceField: "distance",
-            maxDistance: distanceThreshold,
             spherical: true,
             query: { PLACE_TYPE: placeType },
           },
@@ -68,24 +93,45 @@ router.get("/placeName", async (req, res) => {
       ]);
       if (places.length > 0) {
         const place = places[0];
+        allPlaces.push(place);
+
+        if (!closestPlace || place.distance < closestPlace.distance) {
+          closestPlace = place;
+        }
+      }
+    }
+    const closestDistrictCode = closestPlace ? closestPlace.DISTRICT : null;
+    const closestDistrict = closestDistrictCode
+      ? districtNames[closestDistrictCode]
+      : null;
+
+    // only display place names within corresponding threshold
+    allPlaces.forEach((place) => {
+      const placeType = place.PLACE_TYPE;
+      const distanceThreshold = distanceThresholds[placeType];
+      console.log(place.NAME_EN, place.distance);
+      if (place.distance <= distanceThreshold) {
         const name = place.NAME_ALIAS
           ? `${place.NAME_EN} (${place.NAME_ALIAS})`
           : place.NAME_EN;
-        console.log(
-          "Type:",
-          placeType,
-          "Name:",
-          name,
-          "Distance:",
-          place.distance
-        );
         results.push(name);
       }
-    }
-    res.status(200).json(results);
+    });
+    res.status(200).json({ district: closestDistrict, places: results });
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
+  }
+});
+
+// the code to save track data in request body
+router.post("/track", async (req, res) => {
+  try {
+    const gpsData = new GPSData(req.body);
+    await gpsData.save();
+    res.status(200).send("GPS data saved");
+  } catch (err) {
+    res.status(500).send("err.message");
   }
 });
 
@@ -126,7 +172,7 @@ router.put("/placeName", async (req, res) => {
       fs.readFileSync(
         "C:\\Users\\Cinnoline\\OneDrive\\Desktop\\S\\PKPD\\Download_data\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_PLACE_NAME_converted.json",
         "utf8"
-        // "C:\\Your\\Path\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_GEO_PLACE_NAME_converted.json",
+        // "C:\\Your\\Path\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_GEO_PLACE_NAME_converted.json", "utf8"
       )
     );
     const geoNames = await GeoName.find().exec();

@@ -12,14 +12,14 @@ router.get("/distancePosts/nearest", async (req, res) => {
   // test query: http://localhost:8880/facilities/distancePosts/nearest?lat=22.3247157&long=114.2109974
   try {
     const latitude = parseFloat(lat);
-    const longtitude = parseFloat(long);
-    console.log("Query parameters:", { latitude, longtitude, limit });
+    const longitude = parseFloat(long);
+    console.log("Query parameters:", { latitude, longitude, limit });
     const closestPost = await DistancePost.aggregate([
       {
         $geoNear: {
           near: {
             type: "Point",
-            coordinates: [longtitude, latitude],
+            coordinates: [longitude, latitude],
           },
           distanceField: "distance",
           spherical: true,
@@ -51,14 +51,14 @@ router.get("/waterStation/nearest", async (req, res) => {
   // test query: http://localhost:8880/facilities/waterStation/nearest?lat=22.3247157&long=114.2109974
   try {
     const latitude = parseFloat(lat);
-    const longtitude = parseFloat(long);
-    console.log("Query parameters:", { latitude, longtitude, limit });
+    const longitude = parseFloat(long);
+    console.log("Query parameters:", { latitude, longitude, limit });
     const closestStation = await WaterStation.aggregate([
       {
         $geoNear: {
           near: {
             type: "Point",
-            coordinates: [longtitude, latitude],
+            coordinates: [longitude, latitude],
           },
           distanceField: "distance",
           spherical: true,

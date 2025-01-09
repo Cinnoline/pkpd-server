@@ -8,6 +8,7 @@ import logger from "morgan";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import "./cron/deleteOldData.js";
 
 import indexRouter from "./routes/index.js";
 
