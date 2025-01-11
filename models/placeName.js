@@ -6,7 +6,7 @@ const placeNameSchema = new mongoose.Schema(
   {
     geometry: {
       type: { type: String },
-      coordinates: [Number],
+      coordinates: [Number], // [longitude, latitude]
     },
     GEO_NAME_ID: String,
     NAME_EN: String,
