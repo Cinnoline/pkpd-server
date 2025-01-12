@@ -1,14 +1,23 @@
 /** @format */
 
+import express from "express";
 import { Router } from "express";
 import axios from "axios";
 import GeoName from "../models/geoName.js";
 import fs from "fs";
 import PlaceName from "../models/placeName.js";
 import GPSData from "../models/gpsData.js";
+import dotenv from "dotenv";
+import { sendEmailAlert } from "./sendEmailAlert.js";
+
+dotenv.config();
 
 // create a router
 const router = Router();
+router.use(express.json());
+
+let stationaryStartTimestamp = null;
+let lastEmailSent = null;
 
 const districtNames = {
   SK: "Sai Kung",
@@ -45,9 +54,11 @@ const distanceThresholds = {
   Village: 400,
   Islands: 1800,
 };
+
 const sortedPlaceTypes = Object.keys(distanceThresholds).sort(
   (a, b) => distanceThresholds[b] - distanceThresholds[a]
 );
+
 router.get("/placeName", async (req, res) => {
   try {
     const { lat, long, limit = 1 } = req.query;
@@ -124,11 +135,88 @@ router.get("/placeName", async (req, res) => {
   }
 });
 
-// the code to save track data in request body
+// the code to save track data in request body and handle the condition that the user stands stationary for too long
 router.post("/track", async (req, res) => {
+  // request body example:
+  // {
+  //   "time": 1702362000,
+  //   "location": [
+  //     114.237695502
+  //     22.384904081
+  //   ]
+  // }
   try {
-    const gpsData = new GPSData(req.body);
+    const { time, location } = req.body;
+    const [longitude, latitude] = location;
+    if (!time || !latitude || !longitude) {
+      return res.status(400).send("Invalid data");
+    }
+    // transfer time from Epoch & Unix time to ISO 8601 String
+    const date = new Date(time * 1000);
+    const timestamp = new Date(date.getTime());
+    const isoString = timestamp.toISOString();
+    console.log("ISO String:" + isoString);
+
+    // store in the database
+    const gpsData = new GPSData({
+      timestamp: isoString,
+      location: { type: "Point", coordinates: [longitude, latitude] },
+    });
     await gpsData.save();
+
+    const requiredEntries = (4 * 60) / 2; // tracking every 2 minutes
+    const stationaryThreshold = 100; // define stationary threshold (100m)
+    // get time four hours ago
+    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+
+    // get all points within the last four hours
+    const points = await GPSData.find({
+      timestamp: { $gte: fourHoursAgo },
+    });
+
+    // if last four hours were recorded consecutively
+    if (points.length >= requiredEntries - 1) {
+      // get the most distant entry
+      const result = await GPSData.aggregate([
+        {
+          $geoNear: {
+            near: { type: "Point", coordinates: [longitude, latitude] },
+            distanceField: "distance",
+            query: {
+              timestamp: { $gte: fourHoursAgo }, // within the latest 4 hours
+            },
+            spherical: true,
+          },
+        },
+        { $sort: { distance: -1 } }, // sort by distance in descending order
+        { $limit: 1 }, // get the most distant point
+      ]);
+
+      const maxDistance = result[0]?.distance || 0;
+
+      // determine whether the user is stationary in the last four hours
+      if (maxDistance < stationaryThreshold) {
+        const emailInterval = 60 * 60 * 1000; // send an email hourly
+        const now = Date.now();
+        // if the user has been stationary for the first time in the last four hours
+        if (!stationaryStartTimestamp) {
+          stationaryStartTimestamp = fourHoursAgo; // set the start time of stationary
+        }
+        // if the last email was not sent or the last email was sent more than an hour ago
+        if (!lastEmailSent || now - lastEmailSent >= emailInterval) {
+          const intervalHours = Math.floor(
+            (now - stationaryStartTimestamp) / emailInterval
+          ); // calculate the interval in hours
+          // if the user has been stationary for more than 4 hours, send an email hourly
+          await sendEmailAlert(latitude, longitude, intervalHours);
+          lastEmailSent = now; // set the last email sent time
+        }
+      } else {
+        // reset the start time of stationary if the user is no longer stationary
+        stationaryStartTimestamp = null;
+        lastEmailSent = null; // reset the last email sent time
+      }
+    }
     res.status(200).send("GPS data saved");
   } catch (err) {
     res.status(500).send("err.message");
@@ -172,7 +260,7 @@ router.put("/placeName", async (req, res) => {
       fs.readFileSync(
         "C:\\Users\\Cinnoline\\OneDrive\\Desktop\\S\\PKPD\\Download_data\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_PLACE_NAME_converted.json",
         "utf8"
-        // "C:\\Your\\Path\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_GEO_PLACE_NAME_converted.json", "utf8"
+        // \\Your\\Path\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_GEO_PLACE_NAME_converted.json", "utf8"
       )
     );
     const geoNames = await GeoName.find().exec();
@@ -206,7 +294,7 @@ router.put("/placeName", async (req, res) => {
           geometry: geoMatch.geometry,
           GEO_NAME_ID: geoNameId,
           NAME_EN: feature.properties.NAME_EN,
-          NAME_ALIAS: !aliasFeature ? null : aliasFeature.properties.NAME_EN,
+          NAME_ALIAS: aliasFeature?.properties?.NAME_EN ?? null,
           DISTRICT: geoMatch.properties.DISTRICT,
           PLACE_TYPE: geoMatch.properties.PLACE_TYPE,
           PLACE_CLASS: geoMatch.properties.PLACE_CLASS,
