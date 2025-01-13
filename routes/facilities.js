@@ -86,7 +86,7 @@ router.get("/waterStation/nearest", async (req, res) => {
   }
 });
 
-// the code to store the data in the database
+// the code to store the data in the database, wrapped in a PUT request
 router.put("/distance_posts", async (req, res) => {
   try {
     const response = await axios.get(
@@ -112,7 +112,7 @@ router.put("/distance_posts", async (req, res) => {
   }
 });
 
-// the code to store the data in the database
+// the code to store the data in the database, wrapped in a PUT request
 router.put("/water_station", async (req, res) => {
   try {
     const response = await axios.get(

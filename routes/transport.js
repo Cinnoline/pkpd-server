@@ -2,59 +2,84 @@
 
 import { Router } from "express";
 import https from "https";
-import mongoose from "mongoose";
 import axios from "axios";
+import KMBStop from "../models/kmbStop.js";
 
 // create a router
 const router = Router();
 
-//
-const kmbStopsSchema = new mongoose.Schema(
-  {
-    stop: String,
-    name: String,
-    location: {
-      type: { type: String, enum: ["Point"], required: true },
-      coordinates: { type: [Number], required: true },
-    },
-  },
-  { strict: false }
-);
-kmbStopsSchema.index({
-  location: "2dsphere",
-});
-const kmbStop = mongoose.model("transport_kmb_stops", kmbStopsSchema);
-
 router.get("/kmbStops/nearest", async (req, res) => {
-  const { lat, long, limit = 10 } = req.query;
+  const { lat, long } = req.query;
 
   // test query
-  // http://localhost:8880/transport/kmbStops/nearest?lat=22.345435&long=114.19264
+  // http://localhost:8880/transport/kmbStops/nearest?lat=22.345130521&long=114.158208553
 
   try {
-    const kmbStops = await kmbStop
-      .find({
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [parseFloat(long), parseFloat(lat)],
-            },
-            // $maxDistance: 8000, // 8km
+    const nearestStops = await KMBStop.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [parseFloat(long), parseFloat(lat)],
           },
+          distanceField: "distance",
+          maxDistance: 4000, // 4km
+          spherical: true,
         },
+      },
+      {
+        $limit: 16,
+      },
+    ]).exec();
+
+    const result = await Promise.all(
+      nearestStops.map(async (stop) => {
+        const etaResponse = await axios.get(
+          `https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.stopId}`
+        );
+        const etaData = etaResponse.data.data;
+        const formattedETA = {};
+
+        etaData.forEach((item) => {
+          const routeDestKey = `${item.route} - ${item.dest_en}`;
+          // if the route-destination key does not exist, create it
+          if (!formattedETA[routeDestKey]) {
+            formattedETA[routeDestKey] = {
+              route: item.route,
+              destination: item.dest_en,
+              eta: [],
+              etaSeqSet: new Set(), // prevent duplicate eta due to multiple eta_seq with different service types
+            };
+          }
+          // if in service, calculate the ETA
+          if (
+            item.eta &&
+            !formattedETA[routeDestKey].etaSeqSet.has(item.eta_seq)
+          ) {
+            const etaTime = new Date(item.eta).getTime();
+            const currentTime = new Date().getTime();
+            const diffMinutes = Math.ceil((etaTime - currentTime) / 60000) + 1; // convert to minutes
+            formattedETA[routeDestKey].eta.push(diffMinutes);
+            formattedETA[routeDestKey].etaSeqSet.add(item.eta_seq);
+          }
+        });
+        Object.values(formattedETA).forEach((item) => delete item.etaSeqSet);
+        return {
+          name: stop.name,
+          geometry: stop.geometry.coordinates,
+          eta: Object.values(formattedETA),
+        };
       })
-      .limit(parseInt(limit))
-      .select("stop name");
-
-    res.json(kmbStops);
+    );
+    res.json(result);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
   }
 });
 
-router.patch("/transport/kmbStops", async (req, res) => {
+// the code to store the data in the database, only map location by property, wrapped in a PUT request
+router.put("/kmbStops", async (req, res) => {
   try {
     const response = await axios.get(
       "https://data.etabus.gov.hk/v1/transport/kmb/stop"
@@ -62,46 +87,22 @@ router.patch("/transport/kmbStops", async (req, res) => {
     const stops = response.data;
     const mappedStops = stops.data.map((stops) => {
       return {
-        stop: stops.stop,
+        stopId: stops.stop,
         name: stops.name_en,
-        lat: parseFloat(stops.lat),
-        long: parseFloat(stops.long),
+        geometry: {
+          type: "Point",
+          coordinates: [parseFloat(stops.long), parseFloat(stops.lat)],
+        },
       };
     });
-
-    saveToDatabase(mappedStops);
-    res.send(mappedStops);
+    await KMBStop.insertMany(mappedStops);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
   }
 });
 
-// the code to store the data in the database, only map location by property
-router.put("/transport/kmbStops", async (req, res) => {
-  try {
-    const response = await axios.get(
-      "https://data.etabus.gov.hk/v1/transport/kmb/stop"
-    );
-    const stops = response.data;
-    const mappedStops = stops.data.map((stops) => {
-      return {
-        stop: stops.stop,
-        name: stops.name_en,
-        lat: parseFloat(stops.lat),
-        long: parseFloat(stops.long),
-      };
-    });
-
-    saveToDatabase(mappedStops);
-    res.send(mappedStops);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("An error occurred");
-  }
-});
-
-// get kmb bus stop data, http get request
+// legacy code to get kmb bus stop data by native http get request, wrapped in a router
 router.get("/transportation", (req, res) => {
   const url = "https://data.etabus.gov.hk/v1/transport/kmb/stop";
 
@@ -122,32 +123,9 @@ router.get("/transportation", (req, res) => {
         };
       });
 
-      // res.json(filteredData);
       res.send(filteredData);
     });
   });
 });
-
-const DataSchema = new mongoose.Schema({
-  stop: String,
-  name: String,
-  lat: Number,
-  long: Number,
-});
-
-const DataModel = mongoose.model("transport_kmb_stop", DataSchema);
-
-async function saveToDatabase(filteredData) {
-  try {
-    await DataModel.insertMany(filteredData);
-    console.log("Data saved successfully");
-  } catch (error) {
-    console.error("Error saving data: ", error);
-  }
-}
-
-// app.listen(Port, () => {
-//   console.log(`Server is running on Port ${Port}`);
-// });
 
 export default router;

@@ -223,7 +223,7 @@ router.post("/track", async (req, res) => {
   }
 });
 
-// the code to store the GEO_PLACE_NAME data in the database
+// the code to store the GEO_PLACE_NAME data in the database, wrapped in a PUT request
 router.put("/geoName", async (req, res) => {
   try {
     const response = await axios.get(
@@ -251,16 +251,15 @@ router.put("/geoName", async (req, res) => {
   }
 });
 
-// the code to aggregate PLACE_NAME data with GEO_PLACE_NAME data and store them in the database
+// the code to aggregate PLACE_NAME data with GEO_PLACE_NAME data and store them in the database, wrapped in a PUT request
 router.put("/placeName", async (req, res) => {
   try {
     // Download: https://portal.csdi.gov.hk/geoportal/?datasetId=landsd_rcd_1648571595120_89752#metadataInfoPanel
     // read the json file
     const data = JSON.parse(
       fs.readFileSync(
-        "C:\\Users\\Cinnoline\\OneDrive\\Desktop\\S\\PKPD\\Download_data\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_PLACE_NAME_converted.json",
+        "./Your/Path/PlaceName_GEOJSON/GeoName_PlaceName_20241106.gdb_GEO_PLACE_NAME_converted.json",
         "utf8"
-        // \\Your\\Path\\PlaceName_GEOJSON\\GeoName_PlaceName_20241106.gdb_GEO_PLACE_NAME_converted.json", "utf8"
       )
     );
     const geoNames = await GeoName.find().exec();
