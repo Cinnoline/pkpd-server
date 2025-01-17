@@ -1,25 +1,8 @@
 /** @format */
 
-import express from "express";
 import { Router } from "express";
-import https from "https";
 import mongoose from "mongoose";
 import axios from "axios";
-import cron from "node-cron";
-
-// function to update the IP address on DuckDNS
-const updateDuckDNS = async () => {
-  try {
-    const response = await axios.get(
-      `https://www.duckdns.org/update?domains=${DOMAIN}&token=${TOKEN}&verbose=true&clear=true`
-    );
-    console.log("DuckDNS response: " + response.data);
-  } catch {
-    console.error(error);
-  }
-};
-// update the IP address on DuckDNS every time the server starts
-// updateDuckDNS();
 
 // create a router
 const router = Router();
@@ -51,8 +34,9 @@ router.get("/warning_info", async (req, res) => {
     const response = await axios.get(
       "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warningInfo&lang=en"
     );
-    const warningInfo = response.data;
-    res.send(warningInfo.details);
+    const warningInfoData = response.data;
+    const warningInfo = createWarningInfo(warningInfoData);
+    res.send(warningInfo);
     console.log("Warning info fetched successfully");
   } catch (error) {
     console.error(error);
@@ -100,11 +84,5 @@ async function updateWeatherForecast() {
     res.status(500).send("An error occurred");
   }
 }
-
-// once run the function to fetch the weather report
-// updateWeatherForecast();
-
-// run the function to fetch the weather forecast every minute for testing
-// cron.schedule("* * * * *", fetchWeatherForecast);
 
 export default router;
