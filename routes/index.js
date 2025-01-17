@@ -1,8 +1,6 @@
 /** @format */
 
 import express from "express";
-import { query, validationResult, body, matchedData } from "express-validator";
-import session from "express-session";
 import { EventEmitter } from "events";
 import weatherRouter from "./weather.js";
 import facilitiesRouter from "./facilities.js";
@@ -10,7 +8,6 @@ import transportRouter from "./transport.js";
 import locationRouter from "./location.js";
 
 const app = express(); // create an express app
-app.use(express.json()); // use the express.json middleware
 const PORT = 8880; // set the port
 
 app.use("/weather", weatherRouter); // use the weather router
