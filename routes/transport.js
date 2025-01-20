@@ -28,7 +28,7 @@ router.get("/kmbStops/nearest", async (req, res) => {
         },
       },
       {
-        $limit: 6,
+        $limit: 5,
       },
     ]).exec();
 
@@ -80,7 +80,7 @@ router.get("/kmbStops/nearest", async (req, res) => {
 
 router.get("/gmbStops/nearest", async (req, res) => {
   // test query
-  // http://localhost:8880/transport/gmbStops/nearest?lat=22.331636331&long=114.168526503
+  // http://localhost:8880/transport/gmbStops/nearest?lat=22.384522841&long=114.143778736
   try {
     const { lat, long } = req.query;
     const nearbyStops = await GMBStop.aggregate([
@@ -96,7 +96,7 @@ router.get("/gmbStops/nearest", async (req, res) => {
         },
       },
       {
-        $limit: 1, // limit the number of stops to 3
+        $limit: 3, // limit the number of stops to 3
       },
     ]).exec();
     const result = await Promise.all(
@@ -127,7 +127,8 @@ router.get("/gmbStops/nearest", async (req, res) => {
         };
       })
     );
-    res.status(200).json(result);
+    // const
+    res.status(200).send(formatGMBStopData(result));
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -263,7 +264,7 @@ router.put("/gmbRoutes", async (req, res) => {
   }
 });
 
-// legacy code to get kmb bus stop data by native http GET request, wrapped in a router
+// code to get kmb bus stop data by native http GET request, wrapped in a router, not used in the project
 router.get("/transportation", (req, res) => {
   const url = "https://data.etabus.gov.hk/v1/transport/kmb/stop";
 
@@ -288,5 +289,51 @@ router.get("/transportation", (req, res) => {
     });
   });
 });
+
+function formatKMBStopData(busStops) {
+  let result = "";
+
+  busStops.forEach((stop, index) => {
+    result += `Stop Name: ${stop.name}\n`;
+    result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
+    result += `Distance: ${stop.distance.toFixed(2)} meters\n\n`;
+
+    stop.etaDetails.forEach((routeDetail) => {
+      result += `  Route: ${routeDetail.route}\n`;
+      result += `  Destination: ${routeDetail.destination}\n`;
+      if (routeDetail.eta.length > 0) {
+        result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
+      } else {
+        result += `  ETA: Out of service hours\n`;
+      }
+      result += "\n";
+    });
+    result += "-----------------------------------------\n";
+  });
+  return result;
+}
+
+function formatGMBStopData(busStops) {
+  let result = "";
+
+  busStops.forEach((stop, index) => {
+    result += `\t\t${stop.name}\n`;
+    result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
+    result += `Distance: ${stop.distance.toFixed(2)} meters\n\n`;
+
+    stop.etaDetails.forEach((routeDetail) => {
+      result += `  ${routeDetail.route} `;
+      result += `to ${routeDetail.destination}\n`;
+      if (routeDetail.eta.length > 0) {
+        result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
+      } else {
+        result += `  ETA: Out of service hours\n`;
+      }
+      result += "\n";
+    });
+    result += "-----------------------------------------\n";
+  });
+  return result;
+}
 
 export default router;

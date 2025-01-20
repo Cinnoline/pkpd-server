@@ -20,7 +20,7 @@ async function deleteOldData() {
 
 // Schedule the task to run every day at midnight
 cron.schedule("0 0 * * *", () => {
-  console.log("Running scheduled task to delete old GPS data...");
+  // console.log("Running scheduled task to delete old GPS data...");
   deleteOldData();
 });
 

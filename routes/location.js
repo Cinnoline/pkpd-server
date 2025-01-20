@@ -45,13 +45,13 @@ const distanceThresholds = {
   Cave: 18,
   Hill: 1110,
   Island: 1680,
-  Pass: 56,
+  Pass: 60,
   Peninsula: 840,
   Rock: 36,
   Valley: 260,
   Area: 1170,
   Town: 1860,
-  Village: 400,
+  Village: 360,
   Islands: 1800,
 };
 
@@ -128,7 +128,9 @@ router.get("/placeName", async (req, res) => {
         results.push(name);
       }
     });
-    res.status(200).json({ district: closestDistrict, places: results });
+    let formattedResults = results.slice(0, 3).join(", ");
+    const formattedPlaceName = `${closestDistrict} Distrct · ${formattedResults}`;
+    res.status(200).send(formattedPlaceName);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");

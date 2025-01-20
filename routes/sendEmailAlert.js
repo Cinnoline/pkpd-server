@@ -1,7 +1,5 @@
 /** @format */
 
-/** @format */
-
 import { sendEmail } from "../services/sendEmail.js";
 import dotenv from "dotenv";
 
