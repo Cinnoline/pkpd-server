@@ -69,20 +69,4 @@ function createWarningInfo(data) {
   return warningInfo;
 }
 
-async function updateWeatherForecast() {
-  try {
-    const response = await axios.get(
-      "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=flw&lang=en"
-    );
-
-    const weatherForecastData = response.data;
-    // const weatherForecastInfo = await WeatherForecast.find();
-    await WeatherForecast.updateMany({}, weatherForecastData);
-    console.log("Weather forecast data updated successfully");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("An error occurred");
-  }
-}
-
 export default router;

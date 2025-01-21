@@ -6,6 +6,8 @@ import axios from "axios";
 import KMBStop from "../models/kmbStop.js";
 import GMBStop from "../models/gmbStop.js";
 import GMBRoute from "../models/gmbRoute.js";
+import map from "./map.js";
+import generateMapUrl from "./map.js";
 
 // create a router
 const router = Router();
@@ -66,12 +68,19 @@ router.get("/kmbStops/nearest", async (req, res) => {
         Object.values(formattedETA).forEach((item) => delete item.etaSeqSet);
         return {
           name: stop.name,
+          distance: stop.distance,
           geometry: stop.geometry.coordinates,
-          eta: Object.values(formattedETA),
+          etaDetails: Object.values(formattedETA),
         };
       })
     );
-    res.json(result);
+    const mapUrl = generateMapUrl(
+      [parseFloat(lat), parseFloat(long)],
+      result,
+      "kmbStop"
+    );
+    const formattedResult = formatKMBStopData(result);
+    res.status(200).json({ mapUrl, formattedResult });
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -127,8 +136,14 @@ router.get("/gmbStops/nearest", async (req, res) => {
         };
       })
     );
-    // const
-    res.status(200).send(formatGMBStopData(result));
+    const mapUrl = generateMapUrl(
+      [parseFloat(lat), parseFloat(long)],
+      result,
+      "gmbStop"
+    );
+    const formattedResult = formatGMBStopData(result);
+    res.status(200).json({ mapUrl, formattedResult });
+    // res.send(result);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -294,13 +309,13 @@ function formatKMBStopData(busStops) {
   let result = "";
 
   busStops.forEach((stop, index) => {
-    result += `Stop Name: ${stop.name}\n`;
+    result += `\t\t${stop.name}\n`;
     result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
-    result += `Distance: ${stop.distance.toFixed(2)} meters\n\n`;
+    result += `Distance: ${stop.distance.toFixed(1)} meters\n\n`;
 
     stop.etaDetails.forEach((routeDetail) => {
-      result += `  Route: ${routeDetail.route}\n`;
-      result += `  Destination: ${routeDetail.destination}\n`;
+      result += `  ${routeDetail.route} `;
+      result += `to ${routeDetail.destination}\n`;
       if (routeDetail.eta.length > 0) {
         result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
       } else {
@@ -319,7 +334,7 @@ function formatGMBStopData(busStops) {
   busStops.forEach((stop, index) => {
     result += `\t\t${stop.name}\n`;
     result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
-    result += `Distance: ${stop.distance.toFixed(2)} meters\n\n`;
+    result += `Distance: ${stop.distance.toFixed(1)} meters\n\n`;
 
     stop.etaDetails.forEach((routeDetail) => {
       result += `  ${routeDetail.route} `;
