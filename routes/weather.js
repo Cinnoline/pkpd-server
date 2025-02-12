@@ -3,6 +3,7 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import axios from "axios";
+import WeatherStation from "../models/autoWeatherStation.js";
 
 // create a router
 const router = Router();
@@ -44,6 +45,68 @@ router.get("/warning_info", async (req, res) => {
   }
 });
 
+// the router to get the weather report, used by the mobile application only
+router.get("/weather_report", async (req, res) => {
+  const { lat, long } = req.query;
+  // test request:
+  // http://localhost:8880/weather/weather_report?lat=22.3244127&long=114.2109974 // HKUSPACE CC KEC
+  try {
+    const response = await axios.get(
+      `https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en`
+    );
+    const weatherReportData = response.data;
+    const closestStation = await WeatherStation.findOne({
+      geometry: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [long, lat],
+          },
+        },
+      },
+    });
+    const temperatureData = weatherReportData.temperature.data.find(
+      (entry) => entry.place === closestStation.name
+    );
+    const humidity = weatherReportData.humidity.data[0].value;
+    const result = {
+      stationName: closestStation.name,
+      temperature: temperatureData.value,
+      humidity: humidity,
+      updateTime: weatherReportData.updateTime,
+      icon: weatherReportData.icon, // the icon code is an array
+    };
+    const report = createWeatherReport(result);
+    res.send(report);
+    console.log("Weather report data fetched successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+// the code to store the auto weather station data(coordinates) in the database, wrapped in a PUT request
+router.put("/auto_weather_station", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://api.csdi.gov.hk/apim/dataquery/api/?id=hko_rcd_1634957986804_49802&layer=latest_past24_temperature_diff&bbox-crs=WGS84&bbox=113.8,22.1,114.7,23.0&limit=39&offset=0"
+    );
+    const autoWeatherStationData = response.data;
+    const filteredAutoWeatherStationData = autoWeatherStationData.features.map(
+      (feature) => ({
+        name: feature.properties.AutomaticWeatherStation_en,
+        geometry: feature.geometry,
+      })
+    );
+    await WeatherStation.insertMany(filteredAutoWeatherStationData);
+    console.log("Auto weather station data fetched successfully");
+    res.send("Auto weather station data stored successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
 function createWeatherForecast(data) {
   let forecast = `${data.generalSituation}\n${data.forecastPeriod}:\n${data.forecastDesc}\n`;
   if (data.tcInfo) {
@@ -67,6 +130,18 @@ function createWarningInfo(data) {
     warningInfo = "No warning information available";
   }
   return warningInfo;
+}
+
+function createWeatherReport(data) {
+  let report = `Weather report from ${data.stationName} Automatic Weather Station:\n`;
+  report += `Temperature: ${data.temperature}°C\n`;
+  report += `Humidity: ${data.humidity}%\n`;
+  // transform the icon code to the image link
+  data.icon.forEach((code) => {
+    report += `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${code}.png"></img>`;
+  });
+  report += `<br>Update Time: ${data.updateTime}`;
+  return report;
 }
 
 export default router;
