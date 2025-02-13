@@ -1,29 +1,32 @@
 /** @format */
 
 import dotenv from "dotenv";
-import { Router } from "express";
 
 dotenv.config();
-
-const router = Router();
 
 const iconMapping = {
   waterFillingStation: "https://localhost:8880/img/vending-machine.png",
   kmbStop: "https://localhost:8880/img/double-decker-bus.png",
   gmbStop: "https://localhost:8880/img/GREEN-MINIBUS_STAND_HK.svg",
+  location: "https://localhost:8880/img/location_orange.png",
 };
 
-// alternatives of marker
+// alternatives of marker on its color
 const colorMapping = {
   waterFillingStation: "blue",
   kmbStop: "red",
   gmbStop: "green",
+  location: "orange",
 };
 
-function generateMapUrl(currentLocation, data, type) {
-  const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=12&size=400x400&maptype=roadmap`;
+// generate a map image URL with markers for the current location, data, with a specified zoom level
+// ** Note: the function only makes the map display one type of data (marker/position) at a time.
+//    To display multiple types of data, it is necessary to reconstruct routers and transform this function to a middleware.
+function generateMapUrl(currentLocation, data, type, zoom = 12) {
+  const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=${zoom}&size=400x400&maptype=roadmap`;
   let markers = "";
   const customIconUrl = iconMapping[type];
+  const currentLocationMarker = iconMapping["location"];
   // loop through the data array and add markers for each item
   data.forEach((item, index) => {
     const color = colorMapping[type];
@@ -31,17 +34,26 @@ function generateMapUrl(currentLocation, data, type) {
     if (customIconUrl) {
       markers += `&markers=icon:${customIconUrl}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
     } else {
+      // distinguish the markers by color and label
       markers += `&markers=color:${color}|label:${type
         .charAt(0)
         .toUpperCase()}|${item.coordinates[1]},${item.coordinates[0]}`;
     }
   });
-  // const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  // return `${baseUrl}${markers}&key=${apiKey}`;
-  return markers;
+  // add a marker for the current location
+  if (currentLocation) {
+    markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
+  } else {
+    markers += `&markers=color:white|label:L|${currentLocation[0]},${currentLocation[1]}`;
+  }
+
+  // add the path for the route, need to generate the polyline first
+  // const path = `&path=color:0x5cf|weight:5|enc:${polyline}`;
+
+  // add the API key to the URL
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  return `${baseUrl}${markers}&key=${apiKey}`;
+  // return markers;
 }
 
-router.get("/map/zoom-in", async (req, res) => {});
-
-router.get("/map/zoom-out", async (req, res) => {});
 export default generateMapUrl;
