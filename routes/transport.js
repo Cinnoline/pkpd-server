@@ -6,7 +6,6 @@ import axios from "axios";
 import KMBStop from "../models/kmbStop.js";
 import GMBStop from "../models/gmbStop.js";
 import GMBRoute from "../models/gmbRoute.js";
-import map from "./map.js";
 import generateMapUrl from "./map.js";
 
 // create a router
@@ -143,7 +142,6 @@ router.get("/gmbStops/nearest", async (req, res) => {
     );
     const formattedResult = formatGMBStopData(result);
     res.status(200).json({ mapUrl, formattedResult });
-    // res.send(result);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");

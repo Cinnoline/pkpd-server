@@ -133,12 +133,12 @@ function createWarningInfo(data) {
 }
 
 function createWeatherReport(data) {
-  let report = `Weather report from ${data.stationName} Automatic Weather Station:\n`;
-  report += `Temperature: ${data.temperature}°C\n`;
-  report += `Humidity: ${data.humidity}%\n`;
+  let report = `Weather report from ${data.stationName} Automatic Weather Station:<br>`;
+  report += `Temperature: ${data.temperature}°C<br>`;
+  report += `Humidity: ${data.humidity}%<br>`;
   // transform the icon code to the image link
   data.icon.forEach((code) => {
-    report += `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${code}.png"></img>`;
+    report += `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${code}.png" width="200px" height="200px"></img>`;
   });
   report += `<br>Update Time: ${data.updateTime}`;
   return report;

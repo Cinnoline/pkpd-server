@@ -3,13 +3,14 @@ import { Router } from "express";
 import axios from "axios";
 import DistancePost from "../models/distancePosts.js";
 import WaterStation from "../models/waterStation.js";
+import generateMapUrl from "./map.js";
 
 // create a router
 const router = Router();
 
 router.get("/distancePosts/nearest", async (req, res) => {
   const { lat, long, limit = 1 } = req.query;
-  // test query: http://localhost:8880/facilities/distancePosts/nearest?lat=22.3247157&long=114.2109974
+  // test request: http://localhost:8880/facilities/distancePosts/nearest?lat=22.3247157&long=114.2109974
   try {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(long);
@@ -48,7 +49,7 @@ router.get("/distancePosts/nearest", async (req, res) => {
 
 router.get("/waterStation/nearest", async (req, res) => {
   const { lat, long, limit = 1 } = req.query;
-  // test query: http://localhost:8880/facilities/waterStation/nearest?lat=22.3247157&long=114.2109974
+  // test request: http://localhost:8880/facilities/waterStation/nearest?lat=22.3738157&long=114.264019
   try {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(long);
@@ -71,7 +72,7 @@ router.get("/waterStation/nearest", async (req, res) => {
       {
         $project: {
           _id: 0,
-          coordinates: "$geometry.coordinates",
+          geometry: "$geometry.coordinates",
           ADDRESS_EN: 1,
           FACILITY_NAME_EN: 1,
           COUNTRY_PARK_EN: 1,
@@ -79,7 +80,13 @@ router.get("/waterStation/nearest", async (req, res) => {
         },
       },
     ]);
-    res.json(closestStation[0]);
+    const mapUrl = generateMapUrl(
+      [latitude, longitude],
+      closestStation,
+      "waterFillingStation"
+    );
+    const formattedResult = formatWaterFillingStationData(closestStation[0]);
+    res.status(200).json({ mapUrl, formattedResult });
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -141,5 +148,12 @@ router.put("/water_station", async (req, res) => {
     res.status(500).send("An error occurred");
   }
 });
+
+function formatWaterFillingStationData(waterStation) {
+  return `\t\t${waterStation.COUNTRY_PARK_EN.toUpperCase()}\n
+  ${waterStation.FACILITY_NAME_EN} in ${waterStation.ADDRESS_EN}\n
+Location: ${waterStation.geometry[1]},   ${waterStation.geometry[0]}\n
+Distance: ${waterStation.distance.toFixed(1)} meters\n`;
+}
 
 export default router;
