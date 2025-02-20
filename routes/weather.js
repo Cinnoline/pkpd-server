@@ -127,7 +127,7 @@ function createWeatherForecast(data) {
 
 function createWarningInfo(data) {
   if (data.details === undefined) {
-    return "No warning information available";
+    return "There is no special announcement";
   }
   let warningInfo = ``;
   data.details.forEach((detail) => {
