@@ -221,7 +221,7 @@ router.post("/track", async (req, res) => {
     }
     res.status(200).send("GPS data saved");
   } catch (err) {
-    res.status(500).send("err.message");
+    res.status(500).send(err.message);
   }
 });
 

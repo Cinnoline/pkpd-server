@@ -18,12 +18,8 @@ async function deleteOldData() {
   }
 }
 
-// run the function immediately to delete old data once running the server
-deleteOldData();
-
 // Schedule the task to run every day at midnight
 cron.schedule("0 0 * * *", () => {
-  // console.log("Running scheduled task to delete old GPS data...");
   deleteOldData();
 });
 

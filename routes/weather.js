@@ -108,27 +108,32 @@ router.put("/auto_weather_station", async (req, res) => {
 });
 
 function createWeatherForecast(data) {
-  let forecast = `${data.generalSituation}\n${data.forecastPeriod}:\n${data.forecastDesc}\n`;
+  // original data always contains internal line breaks, remove them by hard coding the replacement ("@")
+  const cleanText = (text) => text.replace(/\s+/g, "@");
+  // construct the forecast message
+  let forecast = `${cleanText(data.generalSituation)}\n${
+    data.forecastPeriod
+  }:\n${cleanText(data.forecastDesc)}\n`;
   if (data.tcInfo) {
-    forecast += `Tropical Cyclone Information: ${data.tcInfo}\n`;
+    forecast += `Tropical Cyclone Information: ${cleanText(data.tcInfo)}\n`;
   }
   if (data.fireDangerWarning) {
-    forecast += `Fire Danger Warning: ${data.fireDangerWarning}\n`;
+    forecast += `Fire Danger Warning: ${cleanText(data.fireDangerWarning)}\n`;
   }
-  forecast += `Outlook: ${data.outlook}\n`;
+  forecast += `Outlook: ${cleanText(data.outlook)}\n`;
   forecast += `Update Time: ${data.updateTime}`;
   return forecast;
 }
 
 function createWarningInfo(data) {
+  if (data.details === undefined) {
+    return "No warning information available";
+  }
   let warningInfo = ``;
-  data.forEach((detail) => {
+  data.details.forEach((detail) => {
     warningInfo += [...detail.contents];
     warningInfo += `Update Time: ${detail.updateTime}`;
   });
-  if (warningInfo === "") {
-    warningInfo = "No warning information available";
-  }
   return warningInfo;
 }
 
