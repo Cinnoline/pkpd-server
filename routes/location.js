@@ -137,6 +137,34 @@ router.get("/placeName", async (req, res) => {
   }
 });
 
+// the code to get the latest GPS data from the database, used by Mobile App
+router.get("/track", async (req, res) => {
+  try {
+    // Get the latest GPS data
+    const latestLocation = await GPSData.findOne()
+      .sort({ timestamp: -1 })
+      .exec();
+    if (latestLocation) {
+      const [longitude, latitude] = [...latestLocation.location.coordinates];
+      console.log("Latest location coordinates:", latestLocation.location);
+      const response = {
+        location: {
+          latitude: latitude,
+          longitude: longitude,
+        },
+        timestamp: latestLocation.timestamp,
+      };
+      return res.status(200).json(response);
+    } else {
+      console.log("No location data found.");
+      return res.status(404).json({ error: "No location data found." });
+    }
+  } catch (error) {
+    console.error("Error fetching the latest location:", error);
+    return res.status(500).json({ error: "An error occurred" });
+  }
+});
+
 // the code to save track data in request body and handle the condition that the user stands stationary for too long
 router.post("/track", async (req, res) => {
   // request body example:
