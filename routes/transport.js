@@ -308,7 +308,7 @@ function formatKMBStopData(busStops) {
 
   busStops.forEach((stop, index) => {
     result += `\t\t${stop.name}\n`;
-    result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
+    result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\t`;
     result += `Distance: ${stop.distance.toFixed(1)} meters\n`;
 
     stop.etaDetails.forEach((routeDetail) => {
@@ -332,7 +332,7 @@ function formatGMBStopData(busStops) {
 
   busStops.forEach((stop, index) => {
     result += `\t\t${stop.name}\n`;
-    result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
+    result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\t`;
     result += `Distance: ${stop.distance.toFixed(1)} meters@`;
 
     stop.etaDetails.forEach((routeDetail) => {
