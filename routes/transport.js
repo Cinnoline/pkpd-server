@@ -333,7 +333,7 @@ function formatGMBStopData(busStops) {
   busStops.forEach((stop, index) => {
     result += `\t\t${stop.name}\n`;
     result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
-    result += `Distance: ${stop.distance.toFixed(1)} meters\n\n`;
+    result += `Distance: ${stop.distance.toFixed(1)} meters@`;
 
     stop.etaDetails.forEach((routeDetail) => {
       result += `  ${routeDetail.route} `;
@@ -343,8 +343,9 @@ function formatGMBStopData(busStops) {
       } else {
         result += `  ETA: Out of service hours\n`;
       }
-      result += "\n";
+      result += "@";
     });
+    result = result.slice(0, -1); // remove the last separator
     result += "-----------------------------------------\n";
   });
   return result;
