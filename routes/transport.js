@@ -309,18 +309,19 @@ function formatKMBStopData(busStops) {
   busStops.forEach((stop, index) => {
     result += `\t\t${stop.name}\n`;
     result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\n`;
-    result += `Distance: ${stop.distance.toFixed(1)} meters\n\n`;
+    result += `Distance: ${stop.distance.toFixed(1)} meters\n`;
 
     stop.etaDetails.forEach((routeDetail) => {
       result += `  ${routeDetail.route} `;
       result += `to ${routeDetail.destination}\n`;
       if (routeDetail.eta.length > 0) {
-        result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
+        result += `  ETA: ${routeDetail.eta.join(", ")} minutes`;
       } else {
-        result += `  ETA: Out of service hours\n`;
+        result += `  ETA: Out of service hours`;
       }
-      result += "\n";
+      result += "@"; // add a separator for client to split the data
     });
+    result = result.slice(0, -1); // remove the last separator
     result += "-----------------------------------------\n";
   });
   return result;
