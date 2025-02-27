@@ -27,7 +27,7 @@ const colorMapping = {
 // ** Note: the function only makes the map display one type of data (marker/position) at a time.
 //    To display multiple types of data, it is necessary to reconstruct routers and transform this function to a middleware.
 function generateMapUrl(currentLocation, data, type, zoom = 16) {
-  const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=${zoom}&size=400x400&maptype=roadmap`;
+  const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=${zoom}&size=320x320&format=jpg-baseline&maptype=roadmap`;
   let markers = "";
   const customIconUrl = iconMapping[type];
   const currentLocationMarker = iconMapping["location"];
