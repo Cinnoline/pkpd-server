@@ -319,10 +319,8 @@ function formatKMBStopData(busStops) {
       } else {
         result += `  ETA: Out of service hours`;
       }
-      result += "@"; // add a separator for client to split the data
     });
-    result = result.slice(0, -1); // remove the last separator
-    result += "-----------------------------------------\n";
+    result += "\n-----------------------------------------\n";
   });
   return result;
 }
