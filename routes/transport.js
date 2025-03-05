@@ -315,12 +315,12 @@ function formatKMBStopData(busStops) {
       result += `  ${routeDetail.route} `;
       result += `to ${routeDetail.destination}\n`;
       if (routeDetail.eta.length > 0) {
-        result += `  ETA: ${routeDetail.eta.join(", ")} minutes`;
+        result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
       } else {
-        result += `  ETA: Out of service hours`;
+        result += `  ETA: Out of service hours\n`;
       }
     });
-    result += "\n-----------------------------------------\n";
+    result += "-----------------------------------------\n";
   });
   return result;
 }
