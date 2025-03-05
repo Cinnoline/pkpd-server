@@ -111,16 +111,16 @@ function createWeatherForecast(data) {
   // original data always contains internal line breaks, remove them by hard coding the replacement ("@")
   const cleanText = (text) => text.replace(/\s+/g, "@");
   // construct the forecast message
-  let forecast = `${cleanText(data.generalSituation)}\n${
+  let forecast = `${cleanText(data.generalSituation)}\n\n${
     data.forecastPeriod
-  }:\n${cleanText(data.forecastDesc)}\n`;
+  }:\n${cleanText(data.forecastDesc)}\n\n`;
   if (data.tcInfo) {
-    forecast += `Tropical Cyclone Information: ${cleanText(data.tcInfo)}\n`;
+    forecast += `Tropical Cyclone Information: ${cleanText(data.tcInfo)}\n\n`;
   }
   if (data.fireDangerWarning) {
-    forecast += `Fire Danger Warning: ${cleanText(data.fireDangerWarning)}\n`;
+    forecast += `Fire Danger Warning: ${cleanText(data.fireDangerWarning)}\n\n`;
   }
-  forecast += `Outlook: ${cleanText(data.outlook)}\n`;
+  forecast += `Outlook: ${cleanText(data.outlook)}\n\n`;
   forecast += `Update Time: ${data.updateTime}`;
   return forecast;
 }
