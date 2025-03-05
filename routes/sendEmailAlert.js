@@ -7,7 +7,7 @@ dotenv.config();
 
 // function to send an email alert
 export const sendEmailAlert = async (lat, long, interval) => {
-  const to = process.env.EMAIL_RECIPIENT;
+  const to = [process.env.EMAIL_RECIPIENT_1, process.env.EMAIL_RECIPIENT_2];
   const subject = `Warning: User has been in the same location for more than ${interval} hours`;
   const googleMapsLink = `https://www.google.com/maps?q=${lat},${long}`;
   const html = `

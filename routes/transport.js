@@ -86,6 +86,81 @@ router.get("/kmbStops/nearest", async (req, res) => {
   }
 });
 
+router.get("/kmbStops/nearest", async (req, res) => {
+  // test query
+  // http://localhost:8880/transport/kmbStops/nearest?lat=22.345130521&long=114.158208553
+  try {
+    const { lat, long } = req.query;
+    const nearbyStops = await KMBStop.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [parseFloat(long), parseFloat(lat)],
+          },
+          distanceField: "distance",
+          maxDistance: 4000, // 4km
+          spherical: true,
+        },
+      },
+      {
+        $limit: 5,
+      },
+    ]).exec();
+
+    const result = await Promise.all(
+      nearbyStops.map(async (stop) => {
+        const etaResponse = await axios.get(
+          `https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.stopId}`
+        );
+        const etaData = etaResponse.data.data;
+        const formattedETA = {};
+
+        etaData.forEach((item) => {
+          const routeDestKey = `${item.route} - ${item.dest_en}`;
+          // if the route-destination key does not exist, create it
+          if (!formattedETA[routeDestKey]) {
+            formattedETA[routeDestKey] = {
+              route: item.route,
+              destination: item.dest_en,
+              eta: [],
+              etaSeqSet: new Set(), // prevent duplicate eta due to multiple eta_seq with different service types
+            };
+          }
+          // if in service, calculate the ETA
+          if (
+            item.eta &&
+            !formattedETA[routeDestKey].etaSeqSet.has(item.eta_seq)
+          ) {
+            const etaTime = new Date(item.eta).getTime();
+            const currentTime = new Date().getTime();
+            const diffMinutes = Math.ceil((etaTime - currentTime) / 60000) + 1; // convert to minutes
+            formattedETA[routeDestKey].eta.push(diffMinutes);
+            formattedETA[routeDestKey].etaSeqSet.add(item.eta_seq);
+          }
+        });
+        Object.values(formattedETA).forEach((item) => delete item.etaSeqSet);
+        return {
+          name: stop.name,
+          distance: stop.distance,
+          geometry: stop.geometry.coordinates,
+          etaDetails: Object.values(formattedETA),
+        };
+      })
+    );
+    const mapUrl = generateMapUrl(
+      [parseFloat(lat), parseFloat(long)],
+      result,
+      "kmbStop"
+    );
+    const formattedResult = formatKMBStopData(result);
+    res.status(200).json({ mapUrl, formattedResult });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
 router.get("/gmbStops/nearest", async (req, res) => {
   // test query
   // http://localhost:8880/transport/gmbStops/nearest?lat=22.384522841&long=114.143778736
@@ -331,7 +406,7 @@ function formatGMBStopData(busStops) {
   busStops.forEach((stop, index) => {
     result += `\t\t${stop.name}\n`;
     result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\t`;
-    result += `Distance: ${stop.distance.toFixed(1)} meters@`;
+    result += `Distance: ${stop.distance.toFixed(1)} meters\n`;
 
     stop.etaDetails.forEach((routeDetail) => {
       result += `  ${routeDetail.route} `;
@@ -341,9 +416,7 @@ function formatGMBStopData(busStops) {
       } else {
         result += `  ETA: Out of service hours\n`;
       }
-      result += "@";
     });
-    result = result.slice(0, -1); // remove the last separator
     result += "-----------------------------------------\n";
   });
   return result;
