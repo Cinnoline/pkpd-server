@@ -73,22 +73,21 @@ router.get("/kmbStops/nearest", async (req, res) => {
         };
       })
     );
-    const mapUrl = generateMapUrl(
-      [parseFloat(lat), parseFloat(long)],
-      result,
-      "kmbStop"
-    );
+    // const mapUrl = generateMapUrl(
+    //   [parseFloat(lat), parseFloat(long)],
+    //   result,
+    //   "kmbStop"
+    // );
     const formattedResult = formatKMBStopData(result);
-    res.status(200).json({ mapUrl, formattedResult });
+    // res.status(200).json({ mapUrl, formattedResult });
+    res.status(200).send(formattedResult);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
   }
 });
 
-router.get("/kmbStops/nearest", async (req, res) => {
-  // test query
-  // http://localhost:8880/transport/kmbStops/nearest?lat=22.345130521&long=114.158208553
+router.get("/kmbStops/coordinates", async (req, res) => {
   try {
     const { lat, long } = req.query;
     const nearbyStops = await KMBStop.aggregate([
@@ -99,7 +98,6 @@ router.get("/kmbStops/nearest", async (req, res) => {
             coordinates: [parseFloat(long), parseFloat(lat)],
           },
           distanceField: "distance",
-          maxDistance: 4000, // 4km
           spherical: true,
         },
       },
@@ -107,54 +105,12 @@ router.get("/kmbStops/nearest", async (req, res) => {
         $limit: 5,
       },
     ]).exec();
-
-    const result = await Promise.all(
-      nearbyStops.map(async (stop) => {
-        const etaResponse = await axios.get(
-          `https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${stop.stopId}`
-        );
-        const etaData = etaResponse.data.data;
-        const formattedETA = {};
-
-        etaData.forEach((item) => {
-          const routeDestKey = `${item.route} - ${item.dest_en}`;
-          // if the route-destination key does not exist, create it
-          if (!formattedETA[routeDestKey]) {
-            formattedETA[routeDestKey] = {
-              route: item.route,
-              destination: item.dest_en,
-              eta: [],
-              etaSeqSet: new Set(), // prevent duplicate eta due to multiple eta_seq with different service types
-            };
-          }
-          // if in service, calculate the ETA
-          if (
-            item.eta &&
-            !formattedETA[routeDestKey].etaSeqSet.has(item.eta_seq)
-          ) {
-            const etaTime = new Date(item.eta).getTime();
-            const currentTime = new Date().getTime();
-            const diffMinutes = Math.ceil((etaTime - currentTime) / 60000) + 1; // convert to minutes
-            formattedETA[routeDestKey].eta.push(diffMinutes);
-            formattedETA[routeDestKey].etaSeqSet.add(item.eta_seq);
-          }
-        });
-        Object.values(formattedETA).forEach((item) => delete item.etaSeqSet);
-        return {
-          name: stop.name,
-          distance: stop.distance,
-          geometry: stop.geometry.coordinates,
-          etaDetails: Object.values(formattedETA),
-        };
-      })
-    );
-    const mapUrl = generateMapUrl(
-      [parseFloat(lat), parseFloat(long)],
-      result,
-      "kmbStop"
-    );
-    const formattedResult = formatKMBStopData(result);
-    res.status(200).json({ mapUrl, formattedResult });
+    const result = nearbyStops.map((stop) => {
+      return {
+        geometry: stop.geometry.coordinates,
+      };
+    });
+    res.status(200).json(result);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
