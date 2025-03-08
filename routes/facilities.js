@@ -8,6 +8,7 @@ import generateMapUrl from "./map.js";
 // create a router
 const router = Router();
 
+// DO NOT WRITE USELESS API ENDPOINTS LIKE ME
 router.get("/distancePosts/nearest", async (req, res) => {
   const { lat, long, limit = 1 } = req.query;
   // test request: http://localhost:8880/facilities/distancePosts/nearest?lat=22.3247157&long=114.2109974
@@ -47,13 +48,13 @@ router.get("/distancePosts/nearest", async (req, res) => {
   }
 });
 
+// get the nearest water filling station, not used in the project
 router.get("/waterStation/nearest", async (req, res) => {
   const { lat, long, limit = 1 } = req.query;
   // test request: http://localhost:8880/facilities/waterStation/nearest?lat=22.3738157&long=114.264019
   try {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(long);
-    console.log("Query parameters:", { latitude, longitude, limit });
     const closestStation = await WaterStation.aggregate([
       {
         $geoNear: {
@@ -63,7 +64,7 @@ router.get("/waterStation/nearest", async (req, res) => {
           },
           distanceField: "distance",
           spherical: true,
-          // maxDistance: 3000, // 3km
+          maxDistance: 3000, // 3km
         },
       },
       {
@@ -80,13 +81,54 @@ router.get("/waterStation/nearest", async (req, res) => {
         },
       },
     ]);
-    const mapUrl = generateMapUrl(
-      [latitude, longitude],
-      closestStation,
-      "waterFillingStation"
-    );
     const formattedResult = formatWaterFillingStationData(closestStation[0]);
-    res.status(200).json({ mapUrl, formattedResult });
+    res.status(200).send(formattedResult);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+// get the nearest water filling station, only return the name, the coordinates and the distance
+router.get("/waterStation/coordinates", async (req, res) => {
+  const { lat, long, limit = 1 } = req.query;
+  // test request: http://localhost:8880/facilities/waterStation/coordinates?lat=22.3738157&long=114.264019
+  try {
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(long);
+    const closestStation = await WaterStation.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [longitude, latitude],
+          },
+          distanceField: "distance",
+          spherical: true,
+          maxDistance: 3000, // 3km
+        },
+      },
+      {
+        $limit: parseInt(limit),
+      },
+      {
+        $project: {
+          _id: 0,
+          geometry: "$geometry.coordinates",
+          ADDRESS_EN: 1,
+          FACILITY_NAME_EN: 1,
+          COUNTRY_PARK_EN: 1,
+          distance: 1,
+        },
+      },
+    ]);
+
+    if (!closestStation[0]) {
+      res.status(200).send(null);
+    } else {
+      const formattedResult = formatWaterFillingStationInfo(closestStation[0]);
+      res.json({ location: closestStation[0].geometry, info: formattedResult });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -154,6 +196,14 @@ function formatWaterFillingStationData(waterStation) {
   ${waterStation.FACILITY_NAME_EN} in ${waterStation.ADDRESS_EN}\n
 Location: ${waterStation.geometry[1]},   ${waterStation.geometry[0]}\n
 Distance: ${waterStation.distance.toFixed(1)} meters\n`;
+}
+
+function formatWaterFillingStationInfo(waterStation) {
+  return `${waterStation.FACILITY_NAME_EN}\n in ${
+    waterStation.ADDRESS_EN
+  } is ${waterStation.distance.toFixed(1)}m away from you,\nlocated at ${
+    waterStation.geometry
+  }`;
 }
 
 export default router;
