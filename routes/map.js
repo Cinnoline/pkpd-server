@@ -76,40 +76,40 @@ router.get("/url", async (req, res) => {
     let markers = "";
     const currentLocationMarker = iconMapping["location"];
 
-    const kmbResponse = await axios.get(
-      `${root}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
-    );
-    const kmbData = kmbResponse.data;
-    // loop through the data array and add markers for each item
-    kmbData.forEach((item, index) => {
-      const color = colorMapping["kmbStop"];
-      // if custom icon is provided, use it; otherwise, use the default marker
-      if (iconMapping["kmbStop"]) {
-        markers += `&markers=icon:${iconMapping["kmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
-      } else {
-        // distinguish the markers by color and label
-        markers += `&markers=color:${color}|label:K|${item.geometry[1]},${item.geometry[0]}`;
-      }
-    });
+    // const kmbResponse = await axios.get(
+    //   `${root}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
+    // );
+    // const kmbData = kmbResponse.data;
+    // // loop through the data array and add markers for each item
+    // kmbData.forEach((item, index) => {
+    //   const color = colorMapping["kmbStop"];
+    //   // if custom icon is provided, use it; otherwise, use the default marker
+    //   if (iconMapping["kmbStop"]) {
+    //     markers += `&markers=icon:${iconMapping["kmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
+    //   } else {
+    //     // distinguish the markers by color and label
+    //     markers += `&markers=color:${color}|label:K|${item.geometry[1]},${item.geometry[0]}`;
+    //   }
+    // });
 
-    const gmbResponse = await axios.get(
-      `${root}/transport/gmbStops/coordinates?lat=${lat}&long=${long}`
-    );
-    const gmbData = gmbResponse.data;
-    gmbData.forEach((item, index) => {
-      const color = colorMapping["gmbStop"];
-      // if custom icon is provided, use it; otherwise, use the default marker
-      if (iconMapping["gmbStop"]) {
-        markers += `&markers=icon:${iconMapping["gmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
-      } else {
-        // distinguish the markers by color and label
-        markers += `&markers=color:${color}|label:G|${item.geometry[1]},${item.geometry[0]}`;
-      }
-    });
+    // const gmbResponse = await axios.get(
+    //   `${root}/transport/gmbStops/coordinates?lat=${lat}&long=${long}`
+    // );
+    // const gmbData = gmbResponse.data;
+    // gmbData.forEach((item, index) => {
+    //   const color = colorMapping["gmbStop"];
+    //   // if custom icon is provided, use it; otherwise, use the default marker
+    //   if (iconMapping["gmbStop"]) {
+    //     markers += `&markers=icon:${iconMapping["gmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
+    //   } else {
+    //     // distinguish the markers by color and label
+    //     markers += `&markers=color:${color}|label:G|${item.geometry[1]},${item.geometry[0]}`;
+    //   }
+    // });
 
-    const waterFillingStationResponse = await axios.get(
-      `${root}/facilities/waterStation/coordinates?lat=${lat}&long=${long}`
-    );
+    // const waterFillingStationResponse = await axios.get(
+    //   `${root}/facilities/waterStation/coordinates?lat=${lat}&long=${long}`
+    // );
     // only when the data is available, add a marker for the water filling station
     // if (waterFillingStationResponse.data) {
     //   const waterFillingStationData = waterFillingStationResponse.data;
@@ -123,17 +123,17 @@ router.get("/url", async (req, res) => {
     //   }
     // }
     // add a marker for the current location
-    if (currentLocationMarker) {
-      markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
-    } else {
-      markers += `&markers=color:orange|label:L|${currentLocation[0]},${currentLocation[1]}`;
-    }
+    // if (currentLocationMarker) {
+    //   markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
+    // } else {
+    //   markers += `&markers=color:orange|label:L|${currentLocation[0]},${currentLocation[1]}`;
+    // }
 
     // add the API key to the URL
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
     res.status(200).json({
-      location: currentLocation,
+      // location: currentLocation,
       url: encodeURI(`${baseUrl}${markers}&language=en&key=${apiKey}`),
     });
   } catch (error) {
