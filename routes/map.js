@@ -67,16 +67,17 @@ function generateMapUrl(currentLocation, data, type, zoom = 15) {
 
 // the route to generate a map image URL with markers for the current location, KMB stops, and GMB stops
 // ** Note: This route is reconstructed from the function above.
-router.get("/url", async (req, res) => {
+router.get("/", async (req, res) => {
   const { lat, long } = req.query;
   try {
     const currentLocation = [lat, long];
-    // const root = ;
+    const root = process.env.HOST;
     const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=15&size=280x280&format=jpg-baseline&maptype=roadmap`;
     let markers = "";
     const currentLocationMarker = iconMapping["location"];
+
     const kmbResponse = await axios.get(
-      `${process.env.HOST}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
+      `${root}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
     );
     const kmbData = kmbResponse.data;
     // loop through the data array and add markers for each item
@@ -91,36 +92,36 @@ router.get("/url", async (req, res) => {
       }
     });
 
-    // const gmbResponse = await axios.get(
-    //   `${root}/transport/gmbStops/coordinates?lat=${lat}&long=${long}`
-    // );
-    // const gmbData = gmbResponse.data;
-    // gmbData.forEach((item, index) => {
-    //   const color = colorMapping["gmbStop"];
-    //   // if custom icon is provided, use it; otherwise, use the default marker
-    //   if (iconMapping["gmbStop"]) {
-    //     markers += `&markers=icon:${iconMapping["gmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
-    //   } else {
-    //     // distinguish the markers by color and label
-    //     markers += `&markers=color:${color}|label:G|${item.geometry[1]},${item.geometry[0]}`;
-    //   }
-    // });
+    const gmbResponse = await axios.get(
+      `${root}/transport/gmbStops/coordinates?lat=${lat}&long=${long}`
+    );
+    const gmbData = gmbResponse.data;
+    gmbData.forEach((item, index) => {
+      const color = colorMapping["gmbStop"];
+      // if custom icon is provided, use it; otherwise, use the default marker
+      if (iconMapping["gmbStop"]) {
+        markers += `&markers=icon:${iconMapping["gmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
+      } else {
+        // distinguish the markers by color and label
+        markers += `&markers=color:${color}|label:G|${item.geometry[1]},${item.geometry[0]}`;
+      }
+    });
 
-    // const waterFillingStationResponse = await axios.get(
-    //   `${root}/facilities/waterStation/coordinates?lat=${lat}&long=${long}`
-    // );
+    const waterFillingStationResponse = await axios.get(
+      `${root}/facilities/waterStation/coordinates?lat=${lat}&long=${long}`
+    );
     // only when the data is available, add a marker for the water filling station
-    // if (waterFillingStationResponse.data) {
-    //   const waterFillingStationData = waterFillingStationResponse.data;
-    //   const color = colorMapping["waterFillingStation"];
-    //   // if custom icon is provided, use it; otherwise, use the default marker
-    //   if (iconMapping["waterFillingStation"]) {
-    //     markers += `&markers=icon:${iconMapping["waterFillingStation"]}|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`; // icon cannot be used with label or color
-    //   } else {
-    //     // distinguish the markers by color and label
-    //     markers += `&markers=color:${color}|label:W|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`;
-    //   }
-    // }
+    if (waterFillingStationResponse.data) {
+      const waterFillingStationData = waterFillingStationResponse.data;
+      const color = colorMapping["waterFillingStation"];
+      // if custom icon is provided, use it; otherwise, use the default marker
+      if (iconMapping["waterFillingStation"]) {
+        markers += `&markers=icon:${iconMapping["waterFillingStation"]}|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`; // icon cannot be used with label or color
+      } else {
+        // distinguish the markers by color and label
+        markers += `&markers=color:${color}|label:W|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`;
+      }
+    }
     // add a marker for the current location
     if (currentLocationMarker) {
       markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
