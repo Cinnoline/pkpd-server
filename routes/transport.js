@@ -78,7 +78,7 @@ router.get("/kmbStops/nearest", async (req, res) => {
     //   result,
     //   "kmbStop"
     // );
-    const formattedResult = formatKMBStopData(result);
+    const formattedResult = formatStopData(result);
     // res.status(200).json({ mapUrl, formattedResult });
     res.status(200).send(formattedResult);
   } catch (error) {
@@ -87,6 +87,7 @@ router.get("/kmbStops/nearest", async (req, res) => {
   }
 });
 
+// used by the map.js route to get KMB stop coordinates
 router.get("/kmbStops/coordinates", async (req, res) => {
   try {
     const { lat, long } = req.query;
@@ -166,13 +167,41 @@ router.get("/gmbStops/nearest", async (req, res) => {
         };
       })
     );
-    const mapUrl = generateMapUrl(
-      [parseFloat(lat), parseFloat(long)],
-      result,
-      "gmbStop"
-    );
-    const formattedResult = formatGMBStopData(result);
-    res.status(200).json({ mapUrl, formattedResult });
+    const formattedResult = formatStopData(result);
+    res.status(200).send(formattedResult);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+router.get("/gmbStops/coordinates", async (req, res) => {
+  // test query
+  // http://localhost:8880/transport/gmbStops/coordinates?lat=22.384522841&long=114.143778736
+  try {
+    const { lat, long } = req.query;
+    const nearbyStops = await GMBStop.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [parseFloat(long), parseFloat(lat)],
+          },
+          distanceField: "distance",
+          maxDistance: 4000, // 4km
+          spherical: true,
+        },
+      },
+      {
+        $limit: 3, // limit the number of stops to 3
+      },
+    ]).exec();
+    const result = nearbyStops.map((stop) => {
+      return {
+        geometry: stop.geometry.coordinates,
+      };
+    });
+    res.status(200).json(result);
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -308,7 +337,7 @@ router.put("/gmbRoutes", async (req, res) => {
   }
 });
 
-// code to get kmb bus stop data by native http GET request, wrapped in a router, not used in the project
+// code to get kmb bus stop data by native http GET request, wrapped in a router, not used in this project
 router.get("/transportation", (req, res) => {
   const url = "https://data.etabus.gov.hk/v1/transport/kmb/stop";
 
@@ -328,15 +357,14 @@ router.get("/transportation", (req, res) => {
           long: item.long,
         };
       });
-
       res.send(filteredData);
     });
   });
 });
 
-function formatKMBStopData(busStops) {
+function formatStopData(busStops) {
   let result = "";
-
+  const line = "-----------------------------------------\n";
   busStops.forEach((stop, index) => {
     result += `\t\t${stop.name}\n`;
     result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\t`;
@@ -351,30 +379,9 @@ function formatKMBStopData(busStops) {
         result += `  ETA: Out of service hours\n`;
       }
     });
-    result += "-----------------------------------------\n";
+    result += line;
   });
-  return result;
-}
-
-function formatGMBStopData(busStops) {
-  let result = "";
-
-  busStops.forEach((stop, index) => {
-    result += `\t\t${stop.name}\n`;
-    result += `Coordinates: (${stop.geometry[1]}, ${stop.geometry[0]})\t`;
-    result += `Distance: ${stop.distance.toFixed(1)} meters\n`;
-
-    stop.etaDetails.forEach((routeDetail) => {
-      result += `  ${routeDetail.route} `;
-      result += `to ${routeDetail.destination}\n`;
-      if (routeDetail.eta.length > 0) {
-        result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
-      } else {
-        result += `  ETA: Out of service hours\n`;
-      }
-    });
-    result += "-----------------------------------------\n";
-  });
+  result = result.slice(0, -line.length); // remove the last line
   return result;
 }
 
