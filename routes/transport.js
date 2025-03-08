@@ -131,7 +131,6 @@ router.get("/gmbStops/nearest", async (req, res) => {
             coordinates: [parseFloat(long), parseFloat(lat)],
           },
           distanceField: "distance",
-          maxDistance: 4000, // 4km
           spherical: true,
         },
       },
