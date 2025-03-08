@@ -76,21 +76,21 @@ router.get("/url", async (req, res) => {
     let markers = "";
     const currentLocationMarker = iconMapping["location"];
 
-    // const kmbResponse = await axios.get(
-    //   `${root}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
-    // );
-    // const kmbData = kmbResponse.data;
-    // // loop through the data array and add markers for each item
-    // kmbData.forEach((item, index) => {
-    //   const color = colorMapping["kmbStop"];
-    //   // if custom icon is provided, use it; otherwise, use the default marker
-    //   if (iconMapping["kmbStop"]) {
-    //     markers += `&markers=icon:${iconMapping["kmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
-    //   } else {
-    //     // distinguish the markers by color and label
-    //     markers += `&markers=color:${color}|label:K|${item.geometry[1]},${item.geometry[0]}`;
-    //   }
-    // });
+    const kmbResponse = await axios.get(
+      `${root}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
+    );
+    const kmbData = kmbResponse.data;
+    // loop through the data array and add markers for each item
+    kmbData.forEach((item, index) => {
+      const color = colorMapping["kmbStop"];
+      // if custom icon is provided, use it; otherwise, use the default marker
+      if (iconMapping["kmbStop"]) {
+        markers += `&markers=icon:${iconMapping["kmbStop"]}|${item.geometry[1]},${item.geometry[0]}`; // icon cannot be used with label or color
+      } else {
+        // distinguish the markers by color and label
+        markers += `&markers=color:${color}|label:K|${item.geometry[1]},${item.geometry[0]}`;
+      }
+    });
 
     // const gmbResponse = await axios.get(
     //   `${root}/transport/gmbStops/coordinates?lat=${lat}&long=${long}`
