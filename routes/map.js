@@ -111,17 +111,17 @@ router.get("/", async (req, res) => {
       `${root}/facilities/waterStation/coordinates?lat=${lat}&long=${long}`
     );
     // only when the data is available, add a marker for the water filling station
-    if (waterFillingStationResponse.data) {
-      const waterFillingStationData = waterFillingStationResponse.data;
-      const color = colorMapping["waterFillingStation"];
-      // if custom icon is provided, use it; otherwise, use the default marker
-      if (iconMapping["waterFillingStation"]) {
-        markers += `&markers=icon:${iconMapping["waterFillingStation"]}|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`; // icon cannot be used with label or color
-      } else {
-        // distinguish the markers by color and label
-        markers += `&markers=color:${color}|label:W|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`;
-      }
-    }
+    // if (waterFillingStationResponse.data) {
+    //   const waterFillingStationData = waterFillingStationResponse.data;
+    //   const color = colorMapping["waterFillingStation"];
+    //   // if custom icon is provided, use it; otherwise, use the default marker
+    //   if (iconMapping["waterFillingStation"]) {
+    //     markers += `&markers=icon:${iconMapping["waterFillingStation"]}|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`; // icon cannot be used with label or color
+    //   } else {
+    //     // distinguish the markers by color and label
+    //     markers += `&markers=color:${color}|label:W|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`;
+    //   }
+    // }
     // add a marker for the current location
     if (currentLocationMarker) {
       markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
