@@ -71,13 +71,12 @@ router.get("/url", async (req, res) => {
   const { lat, long } = req.query;
   try {
     const currentLocation = [lat, long];
-    const root = process.env.HOST;
+    // const root = ;
     const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=15&size=280x280&format=jpg-baseline&maptype=roadmap`;
     let markers = "";
     const currentLocationMarker = iconMapping["location"];
-
     const kmbResponse = await axios.get(
-      `${root}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
+      `${process.env.HOST}/transport/kmbStops/coordinates?lat=${lat}&long=${long}`
     );
     const kmbData = kmbResponse.data;
     // loop through the data array and add markers for each item
@@ -123,17 +122,17 @@ router.get("/url", async (req, res) => {
     //   }
     // }
     // add a marker for the current location
-    // if (currentLocationMarker) {
-    //   markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
-    // } else {
-    //   markers += `&markers=color:orange|label:L|${currentLocation[0]},${currentLocation[1]}`;
-    // }
+    if (currentLocationMarker) {
+      markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
+    } else {
+      markers += `&markers=color:orange|label:L|${currentLocation[0]},${currentLocation[1]}`;
+    }
 
     // add the API key to the URL
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
     res.status(200).json({
-      // location: currentLocation,
+      location: currentLocation,
       url: encodeURI(`${baseUrl}${markers}&language=en&key=${apiKey}`),
     });
   } catch (error) {
