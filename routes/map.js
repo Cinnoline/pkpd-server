@@ -67,7 +67,7 @@ function generateMapUrl(currentLocation, data, type, zoom = 15) {
 
 // the route to generate a map image URL with markers for the current location, KMB stops, and GMB stops
 // ** Note: This route is reconstructed from the function above.
-router.get("/", async (req, res) => {
+router.get("/url", async (req, res) => {
   const { lat, long } = req.query;
   try {
     const currentLocation = [lat, long];
