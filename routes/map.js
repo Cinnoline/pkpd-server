@@ -131,10 +131,10 @@ router.get("/", async (req, res) => {
 
     // add the API key to the URL
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-
     res.status(200).json({
       location: currentLocation,
       url: encodeURI(`${baseUrl}${markers}&language=en&key=${apiKey}`),
+      info: waterFillingStationResponse.data.info,
     });
   } catch (error) {
     console.error(error);

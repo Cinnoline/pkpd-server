@@ -124,7 +124,7 @@ router.get("/waterStation/coordinates", async (req, res) => {
     ]);
 
     if (!closestStation[0]) {
-      res.status(200).send(null);
+      res.status(200).send({ info: "" });
     } else {
       const formattedResult = formatWaterFillingStationInfo(closestStation[0]);
       res.json({ geometry: closestStation[0].geometry, info: formattedResult });
