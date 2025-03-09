@@ -111,7 +111,7 @@ router.get("/", async (req, res) => {
       `${root}/facilities/waterStation/coordinates?lat=${lat}&long=${long}`
     );
     // only when the data is available, add a marker for the water filling station
-    if (waterFillingStationResponse.data) {
+    if (waterFillingStationResponse.data.geometry) {
       const waterFillingStationData = waterFillingStationResponse.data;
       const color = colorMapping["waterFillingStation"];
       // if custom icon is provided, use it; otherwise, use the default marker
