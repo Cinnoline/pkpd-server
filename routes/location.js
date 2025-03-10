@@ -156,8 +156,7 @@ router.get("/track", async (req, res) => {
       };
       return res.status(200).json(response);
     } else {
-      console.log("No location data found.");
-      return res.status(404).json({ error: "No location data found." });
+      return res.status(200).json({ info: "No location data found." });
     }
   } catch (error) {
     console.error("Error fetching the latest location:", error);
@@ -171,7 +170,7 @@ router.post("/track", async (req, res) => {
   // {
   //   "time": 1702362000,
   //   "location": [
-  //     114.237695502
+  //     114.237695502,
   //     22.384904081
   //   ]
   // }
