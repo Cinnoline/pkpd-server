@@ -371,10 +371,8 @@ function formatStopData(busStops) {
 
     stop.etaDetails.forEach((routeDetail) => {
       let routeName = routeDetail.route + " to " + routeDetail.destination;
-      const formattedRoute = addNewlinesByWord(routeName, 70);
-      // result += `  ${routeDetail.route} `;
-      // result += `to ${routeDetail.destination}\n`;
-      result += `  ${formattedRoute}\n`;
+      const formattedRoute = addNewlinesByWord(routeName, 70); //  make the characters less than 70 every row
+      result += `${formattedRoute}\n`;
       if (routeDetail.eta.length > 0) {
         result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
       } else {
@@ -387,6 +385,7 @@ function formatStopData(busStops) {
   return result;
 }
 
+// Add newlines to a string by word
 function addNewlinesByWord(input, maxLineLength) {
   let words = input.split(" "); // Split the string into words
   let result = "";
