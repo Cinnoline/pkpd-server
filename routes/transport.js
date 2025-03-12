@@ -370,7 +370,7 @@ function formatStopData(busStops) {
     result += `Distance: ${stop.distance.toFixed(1)} meters\n`;
 
     stop.etaDetails.forEach((routeDetail) => {
-      let routeName = routeDetail.route + "to" + routeDetail.destination;
+      let routeName = routeDetail.route + " to " + routeDetail.destination;
       const formattedRoute = addNewlinesByWord(routeName, 70);
       // result += `  ${routeDetail.route} `;
       // result += `to ${routeDetail.destination}\n`;
