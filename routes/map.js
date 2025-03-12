@@ -72,7 +72,7 @@ router.get("/", async (req, res) => {
   try {
     const currentLocation = [lat, long];
     const root = process.env.HOST;
-    const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=15&size=280x280&format=jpg-baseline&maptype=roadmap`;
+    const baseUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${currentLocation[0]},${currentLocation[1]}&zoom=15&size=320x320&format=jpg-baseline&maptype=roadmap`;
     let markers = "";
     const currentLocationMarker = iconMapping["location"];
 
