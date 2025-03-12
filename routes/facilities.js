@@ -159,14 +159,15 @@ router.get("/bbq/coordinates", async (req, res) => {
       {
         $project: {
           _id: 0,
-          geometry: "$geometry.coordinates",
+          geometry: "$coordinates",
         },
       },
     ]);
     if (!closestBBQ[0]) {
       res.status(200).send({ geometry: null });
+    } else {
+      res.status(200).send({ geometry: closestBBQ[0].geometry });
     }
-    res.send({ geometry: closestBBQ[0].geometry });
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
