@@ -370,8 +370,11 @@ function formatStopData(busStops) {
     result += `Distance: ${stop.distance.toFixed(1)} meters\n`;
 
     stop.etaDetails.forEach((routeDetail) => {
-      result += `  ${routeDetail.route} `;
-      result += `to ${routeDetail.destination}\n`;
+      let routeName = routeDetail.route + "to" + routeDetail.destination;
+      const formattedRoute = addNewlinesByWord(routeName, 70);
+      // result += `  ${routeDetail.route} `;
+      // result += `to ${routeDetail.destination}\n`;
+      result += `  ${formattedRoute}\n`;
       if (routeDetail.eta.length > 0) {
         result += `  ETA: ${routeDetail.eta.join(", ")} minutes\n`;
       } else {
@@ -381,6 +384,25 @@ function formatStopData(busStops) {
     result += line;
   });
   result = result.slice(0, -line.length); // remove the last line
+  return result;
+}
+
+function addNewlinesByWord(input, maxLineLength) {
+  let words = input.split(" "); // Split the string into words
+  let result = "";
+  let line = "";
+
+  for (let word of words) {
+    if ((line + word).length > maxLineLength) {
+      result += line.trim() + "\n"; // Add the current line and start a new one
+      line = ""; // Reset the line
+    }
+    line += word + " "; // Add the word to the current line
+  }
+
+  // Add the last line
+  result += line.trim();
+
   return result;
 }
 
