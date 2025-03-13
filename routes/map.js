@@ -21,6 +21,7 @@ const iconMapping = {
     "https://pkpd-assets.sgp1.digitaloceanspaces.com/double-decker-bus.png",
   gmbStop:
     "https://pkpd-assets.sgp1.digitaloceanspaces.com/GREEN_MINIBUS_STAND_HK.png",
+  bbq: "https://pkpd-assets.sgp1.digitaloceanspaces.com/barbeque.png",
   location: "https://pkpd-assets.sgp1.digitaloceanspaces.com/location.png",
 };
 
@@ -29,6 +30,7 @@ const colorMapping = {
   waterFillingStation: "blue",
   kmbStop: "red",
   gmbStop: "green",
+  bbq: "brown",
 };
 
 // generate a map image URL with markers for the current location, data, with a specified zoom level, deprecated
@@ -122,6 +124,22 @@ router.get("/", async (req, res) => {
         markers += `&markers=color:${color}|label:W|${waterFillingStationData.geometry[1]},${waterFillingStationData.geometry[0]}`;
       }
     }
+
+    const bbqResponse = await axios.get(
+      `${root}/facilities/bbq/coordinates?lat=${lat}&long=${long}`
+    );
+    // only when the data is available, add a marker for the BBQ facility
+    if (bbqResponse.data.geometry) {
+      const bbqData = bbqResponse.data;
+      const color = colorMapping["bbq"];
+      // if custom icon is provided, use it; otherwise, use the default marker
+      if (iconMapping["bbq"]) {
+        markers += `&markers=icon:${iconMapping["bbq"]}|${bbqData.geometry[1]},${bbqData.geometry[0]}`; // icon cannot be used with label or color
+      } else {
+        // distinguish the markers by color and label
+        markers += `&markers=color:${color}|label:B|${bbqData.geometry[1]},${bbqData.geometry[0]}`;
+      }
+    }
     // add a marker for the current location
     if (currentLocationMarker) {
       markers += `&markers=icon:${currentLocationMarker}|${currentLocation[0]},${currentLocation[1]}`;
@@ -134,7 +152,6 @@ router.get("/", async (req, res) => {
     res.status(200).json({
       location: currentLocation,
       url: encodeURI(`${baseUrl}${markers}&language=en&key=${apiKey}`),
-      info: waterFillingStationResponse.data.info,
     });
   } catch (error) {
     console.error(error);

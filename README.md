@@ -43,6 +43,6 @@ We would also like to acknowledge the various libraries and tools that were esse
 - Libraries: mongoose, nodemailer, axios, node-cron and dotenv.
 - Tools: MongoDB, Thunder Client (VS Code extension), Android Studio with Flutter SDK, Arduino IDE and Git.
 
-Moreover, we would like to acknowledge the authors of the assets are used in our map marker icon. 
-They are: [bsd](https://www.flaticon.com/authors/bsd), [meaicon](https://www.flaticon.com/authors/meaicon), [Freepik](https://www.freepik.com/), [Tart Workshop](https://www.tartworkshop.com/) and [Font Bureau](https://typenetwork.com/type-foundries/font-bureau/farewell-font-bureau).
+Moreover, we would like to thank the authors who provided us with the assets used in our map marker icon, as well as the fonts used in application. 
+They are: [bsd](https://www.flaticon.com/authors/bsd), [meaicon](https://www.flaticon.com/authors/meaicon), [Freepik](https://www.freepik.com/), [Icongeek26](https://www.flaticon.com/authors/icongeek26), [Tart Workshop](https://www.tartworkshop.com/) and [Font Bureau](https://typenetwork.com/type-foundries/font-bureau/farewell-font-bureau).
 Your continuous support and dedication to open-source projects have made a significant impact on our work.
