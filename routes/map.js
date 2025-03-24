@@ -67,7 +67,8 @@ function generateMapUrl(currentLocation, data, type, zoom = 15) {
   return encodeURI(`${baseUrl}${markers}&language=en&key=${apiKey}`);
 }
 
-// the route to generate a map image URL with markers for the current location, KMB stops, and GMB stops
+// the route to generate a map image URL with markers for the current location,
+// KMB stops, GMB stops, water filling stations, and BBQ facilities
 // ** Note: This route is reconstructed from the function above.
 router.get("/", async (req, res) => {
   const { lat, long } = req.query;

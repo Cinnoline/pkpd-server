@@ -24,13 +24,51 @@ For example, use npm:
 ```
 npm install dotenv
 ```
-\Use yarn:
+Use yarn:
 ```
 yarn add dotenv
 ```
 ### Use
 
 Use `npm start`, or `yarn start` to run the server.
+
+## For users
+You can access the following endpoints:
+
+| Endpoints | Description |
+| ------------- |-------------|
+| /weather/weather_forecast | weather forecast  |
+| /weather/warning_info | warning information |
+| /facilities/waterStation/nearest?lat=${latitude}&long=${longitude} | nearest water filling station information(map and string), current latitude and longitude should be provided |
+| /transport/kmbStops/nearest?lat=${latitude}&long=${longitude} | nearby KMB stops information (string), current latitude and longitude should be provided |
+| /transport/gmbStops/nearest?lat=${latitude}&long=${longitude} | nearby Green Minibus stops information (string), current latitude and longitude should be provided |
+| /location/placeName?lat=${latitude}&long=${longitude} | nearby place name, current latitude and longitude should be provided |
+|/map?lat={latitude}&long={longitude}| the route to generate a map image URL with markers for the current location, KMB stops, GMB stops, water filling stations, and BBQ facilities|
+
+For example, you can access
+```
+https://pkpd-server-zil3m.ondigitalocean.app/transport/gmbStops/nearest?lat=22.384522841&long=114.143778736
+```
+to get a string with nearby GMB stops routes information. 
+
+The above endpoints should be sent by a **GET** request,\
+and the following request should be by a **POST** with a **request body**:
+
+| Endpoints | Description |
+| ------------- |-------------|
+| /location/track | save track into DB |
+
+Request body example:
+
+```
+{
+    "time": 1702362000, // epoch time
+    "location": [
+      114.237695502,
+      22.384904081
+    ]
+}
+```
 
 ## Acknowledgement
 

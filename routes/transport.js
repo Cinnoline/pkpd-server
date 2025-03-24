@@ -174,6 +174,7 @@ router.get("/gmbStops/nearest", async (req, res) => {
   }
 });
 
+// used by the map.js route to get Green Minibus stop coordinates
 router.get("/gmbStops/coordinates", async (req, res) => {
   // test query
   // http://localhost:8880/transport/gmbStops/coordinates?lat=22.384522841&long=114.143778736

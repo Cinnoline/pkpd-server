@@ -10,6 +10,7 @@ export const sendEmailAlert = async (lat, long, interval) => {
   const to = [process.env.EMAIL_RECIPIENT_1, process.env.EMAIL_RECIPIENT_2];
   const subject = `Warning: User has been in the same location for more than ${interval} hours`;
   const googleMapsLink = `https://www.google.com/maps?q=${lat},${long}`;
+  // use html to format the email content
   const html = `
   <h2 style="text-align:center">Warning</h2>
   <p>The user has been in the same location for more than ${interval} hours. 
