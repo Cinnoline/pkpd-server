@@ -237,7 +237,7 @@ router.post("/track", async (req, res) => {
 
       // determine whether the user is stationary in the last four hours
       if (maxDistance < stationaryThreshold) {
-        const emailInterval = 60 * 60 * 1000; // send an email hourly
+        const emailInterval = 1 * 60 * 1000; // send an email hourly
         const now = Date.now();
         // if the user has been stationary for the first time in the last four hours
         if (!stationaryStartTimestamp) {
@@ -250,6 +250,7 @@ router.post("/track", async (req, res) => {
           ); // calculate the interval in hours
           // if the user has been stationary for more than 4 hours, send an email hourly
           await sendEmailAlert(latitude, longitude, intervalHours);
+          console.log("Email sent");
           lastEmailSent = now; // set the last email sent time
         }
       } else {
