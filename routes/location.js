@@ -196,6 +196,7 @@ router.post("/track", async (req, res) => {
     } else {
       return res.status(400).send("Invalid time format");
     }
+    console.log("Received GPS data:", { isoString, latitude, longitude });
 
     // store in the database
     const gpsData = new GPSData({
@@ -204,7 +205,7 @@ router.post("/track", async (req, res) => {
     });
     await gpsData.save();
 
-    const requiredEntries = (4 * 60) / 1; // tracking every 2 minutes
+    const requiredEntries = (4 * 60) / 1; // tracking every minute
     const stationaryThreshold = 100; // define stationary threshold (100m)
     // get time four hours ago
     const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
