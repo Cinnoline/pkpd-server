@@ -177,14 +177,25 @@ router.post("/track", async (req, res) => {
   try {
     const { time, location } = req.body;
     const [longitude, latitude] = location;
+
+    // Validate input
     if (!time || !latitude || !longitude) {
       return res.status(400).send("Invalid data");
     }
-    // transfer time from Epoch & Unix time to ISO 8601 String
-    const date = new Date(time * 1000);
-    const timestamp = new Date(date.getTime());
-    const isoString = timestamp.toISOString();
-    console.log("ISO String:" + isoString);
+
+    // Check whether `time` is an epoch time (number) or an ISO string
+    let isoString;
+
+    if (typeof time === "number") {
+      // Treat as epoch time (assuming it's in seconds, multiply by 1000 for ms)
+      const date = new Date(time * 1000);
+      isoString = date.toISOString();
+    } else if (typeof time === "string" && !isNaN(Date.parse(time))) {
+      // Treat as ISO string (validatable by Date.parse)
+      isoString = new Date(time).toISOString();
+    } else {
+      return res.status(400).send("Invalid time format");
+    }
 
     // store in the database
     const gpsData = new GPSData({
@@ -193,7 +204,7 @@ router.post("/track", async (req, res) => {
     });
     await gpsData.save();
 
-    const requiredEntries = (4 * 60) / 2; // tracking every 2 minutes
+    const requiredEntries = (4 * 60) / 1; // tracking every 2 minutes
     const stationaryThreshold = 100; // define stationary threshold (100m)
     // get time four hours ago
     const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
