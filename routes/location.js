@@ -205,7 +205,7 @@ router.post("/track", async (req, res) => {
     });
     await gpsData.save();
 
-    const requiredEntries = (4 * 60) / 1; // tracking every minute
+    const requiredEntries = (4 * 2.5) / 1; // tracking every minute
     const stationaryThreshold = 100; // define stationary threshold (100m)
     // get time four hours ago
     const fourHoursAgo = new Date(Date.now() - 4 * 2.5 * 60 * 1000);
