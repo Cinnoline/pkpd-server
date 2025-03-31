@@ -45,7 +45,7 @@ router.get("/warning_info", async (req, res) => {
   }
 });
 
-// the router to get the weather report, used by the mobile application only
+// the router to get the weather report
 router.get("/weather_report", async (req, res) => {
   const { lat, long } = req.query;
   // test request:
@@ -77,6 +77,46 @@ router.get("/weather_report", async (req, res) => {
       icon: weatherReportData.icon, // the icon code is an array
     };
     const report = createWeatherReport(result);
+    res.send(report);
+    console.log("Weather report data fetched successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+// the router to get the weather report, used by the mobile application only
+router.get("/weather_report_app", async (req, res) => {
+  const { lat, long } = req.query;
+  // test request:
+  // http://localhost:8880/weather/weather_report?lat=22.3244127&long=114.2109974 // HKUSPACE CC KEC
+  try {
+    const response = await axios.get(
+      `https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en`
+    );
+    const weatherReportData = response.data;
+    const closestStation = await WeatherStation.findOne({
+      geometry: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [long, lat],
+          },
+        },
+      },
+    });
+    const temperatureData = weatherReportData.temperature.data.find(
+      (entry) => entry.place === closestStation.name
+    );
+    const humidity = weatherReportData.humidity.data[0].value;
+    const result = {
+      stationName: closestStation.name,
+      temperature: temperatureData.value,
+      humidity: humidity,
+      updateTime: weatherReportData.updateTime,
+      icon: weatherReportData.icon, // the icon code is an array
+    };
+    const report = createWeatherReportHTML(result);
     res.send(report);
     console.log("Weather report data fetched successfully");
   } catch (error) {
@@ -138,6 +178,21 @@ function createWarningInfo(data) {
 }
 
 function createWeatherReport(data) {
+  let info = `Weather report from ${data.stationName} Automatic Weather Station:\n`;
+  info += `Temperature: ${data.temperature}°C\t`;
+  info += `Humidity: ${data.humidity}%\n`;
+  let markers = [];
+  // transform the icon code to the image link
+  data.icon.forEach((code) => {
+    markers.push(
+      `https://www.hko.gov.hk/images/HKOWxIconOutline/pic${code}.png`
+    );
+  });
+  info += `Update Time: ${data.updateTime}`;
+  return { info, markers };
+}
+
+function createWeatherReportHTML(data) {
   let report = `Weather report from ${data.stationName} Automatic Weather Station:<br>`;
   report += `Temperature: ${data.temperature}°C<br>`;
   report += `Humidity: ${data.humidity}%<br>`;
