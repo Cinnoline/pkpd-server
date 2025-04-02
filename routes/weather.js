@@ -8,11 +8,29 @@ import WeatherStation from "../models/autoWeatherStation.js";
 // create a router
 const router = Router();
 
-const WeatherForecastSchema = new mongoose.Schema({}, { strict: false });
-const WeatherForecast = mongoose.model(
-  "weather_forecast",
-  WeatherForecastSchema
-);
+const warningCodeMap = {
+  WFIREY: "firey",
+  WFIRER: "firer",
+  WFROST: "frost",
+  WHOT: "vhot",
+  WCOLD: "cold",
+  WMSGNL: "sms",
+  WRAINA: "raina",
+  WRAINR: "rainr",
+  WRAINB: "rainb",
+  WFNTSA: "ntfl",
+  WL: "landslip",
+  TC1: "tc1",
+  TC3: "tc3",
+  TC8NE: "tc8ne",
+  TC8SE: "tc8se",
+  TC8NW: "tc8nw",
+  TC8SW: "tc8sw",
+  TC9: "tc9",
+  TC10: "tc10",
+  WTMW: "tsunami-warn",
+  WTS: "ts",
+};
 
 router.get("/weather_forecast", async (req, res) => {
   try {
@@ -39,6 +57,21 @@ router.get("/warning_info", async (req, res) => {
     const warningInfo = createWarningInfo(warningInfoData);
     res.send(warningInfo);
     console.log("Warning info fetched successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+});
+
+router.get("/warning_sum", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en"
+    );
+    const warningSumData = response.data;
+    const warningSum = createWarningIcon(warningSumData);
+    res.send(warningSum);
+    console.log("Warning Sum fetched successfully");
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred");
@@ -172,9 +205,26 @@ function createWarningInfo(data) {
   let warningInfo = ``;
   data.details.forEach((detail) => {
     warningInfo += [...detail.contents];
-    warningInfo += `Update Time: ${detail.updateTime}`;
+    warningInfo += `\nUpdate Time: ${detail.updateTime}`;
   });
-  return warningInfo;
+  return addNewlinesByWord(warningInfo, 70);
+}
+
+function createWarningIcon(data) {
+  if (!data) {
+    return;
+  }
+  let warningIcon = [];
+  for (const key in data) {
+    if (data[key] && data[key].code && data[key].code != "CANCEL") {
+      warningIcon.push(
+        `https://www.hko.gov.hk/tc/wxinfo/dailywx/images/${
+          warningCodeMap[data[key].code]
+        }.gif`
+      );
+    }
+  }
+  return warningIcon;
 }
 
 function createWeatherReport(data) {
@@ -202,6 +252,25 @@ function createWeatherReportHTML(data) {
   });
   report += `<br>Update Time: ${data.updateTime}`;
   return report;
+}
+
+function addNewlinesByWord(input, maxLineLength) {
+  let words = input.split(" "); // Split the string into words
+  let result = "";
+  let line = "";
+
+  for (let word of words) {
+    if ((line + word).length > maxLineLength) {
+      result += line.trim() + "\n"; // Add the current line and start a new one
+      line = ""; // Reset the line
+    }
+    line += word + " "; // Add the word to the current line
+  }
+
+  // Add the last line
+  result += line.trim();
+
+  return result;
 }
 
 export default router;
