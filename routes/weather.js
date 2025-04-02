@@ -207,7 +207,7 @@ function createWarningInfo(data) {
     warningInfo += [...detail.contents];
     warningInfo += `\nUpdate Time: ${detail.updateTime}\n`;
   });
-  return addNewlinesByWord(warningInfo, 52);
+  return addNewlinesByWord(warningInfo, 70);
 }
 
 function createWarningIcon(data) {
