@@ -202,14 +202,15 @@ function createWarningInfo(data) {
   if (data.details === undefined) {
     return "There is no special announcement";
   }
+  const cleanText = (text) => text.replace(/\s+/g, "@");
   let warningInfo = ``;
   data.details.forEach((detail) => {
-    warningInfo += [...detail.contents];
-    warningInfo += `\nUpdate Time: ${detail.updateTime}\n`;
+    warningInfo += cleanText([...detail.contents]);
+    warningInfo += `\nUpdate Time: ${clean(detail.updateTime)}\n`;
   });
-  return addNewlinesByWord(warningInfo, 70);
+  return addNewlinesByWord(warningInfo, 66);
 }
-
+A;
 function createWarningIcon(data) {
   if (!data) {
     return;
