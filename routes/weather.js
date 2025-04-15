@@ -210,7 +210,7 @@ function createWarningInfo(data) {
   });
   return addNewlinesByWord(warningInfo, 66);
 }
-A;
+
 function createWarningIcon(data) {
   if (!data) {
     return;
