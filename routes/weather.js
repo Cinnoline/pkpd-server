@@ -205,8 +205,8 @@ function createWarningInfo(data) {
   const cleanText = (text) => text.replace(/\s+/g, "@");
   let warningInfo = ``;
   data.details.forEach((detail) => {
-    warningInfo += cleanText([...detail.contents]);
-    warningInfo += `\nUpdate Time: ${cleanText(detail.updateTime)}\n`;
+    warningInfo += [cleanText(...detail.contents)];
+    warningInfo += "\n" + cleanText(`Update Time: ${detail.updateTime}`) + "\n";
   });
   return addNewlinesByWord(warningInfo, 66);
 }
