@@ -250,7 +250,7 @@ router.post("/track", async (req, res) => {
             (now - stationaryStartTimestamp) / emailInterval
           ); // calculate the interval in hours
           // if the user has been stationary for more than 4 hours, send an email hourly
-          await sendEmailAlert(latitude, longitude, intervalHours);
+          await sendEmailAlert(latitude, longitude, (intervalHours * 2) / 5); // !minute
           console.log("Email sent");
           lastEmailSent = now; // set the last email sent time
         }
