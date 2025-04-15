@@ -31,6 +31,13 @@ yarn add dotenv
 ### Use
 
 Use `npm start`, or `yarn start` to run the server.
+Express.js is normally run on Node.js. 
+Alternatively, [bun](https://bun.sh/) can run Express.js, you can change the `start` script in `package.json` file \
+```
+  "scripts": {
+    "start": "node app.js" // You can use bun if you prefer 
+  },
+```
 
 ## For users
 You can access the following endpoints:
@@ -39,6 +46,8 @@ You can access the following endpoints:
 | ------------- |-------------|
 | /weather/weather_forecast | weather forecast  |
 | /weather/warning_info | warning information |
+| /weather/weather_report?lat=${latitude}&long=${longitude}| the weather report from the nearest weather station, as well as weather icons  |
+| /weather/warning_sum | warning icon (in gif format) |
 | /facilities/waterStation/nearest?lat=${latitude}&long=${longitude} | nearest water filling station information(map and string), current latitude and longitude should be provided |
 | /transport/kmbStops/nearest?lat=${latitude}&long=${longitude} | nearby KMB stops information (string), current latitude and longitude should be provided |
 | /transport/gmbStops/nearest?lat=${latitude}&long=${longitude} | nearby Green Minibus stops information (string), current latitude and longitude should be provided |
@@ -81,6 +90,6 @@ We would also like to acknowledge the various libraries and tools that were esse
 - Libraries: mongoose, nodemailer, axios, node-cron and dotenv.
 - Tools: MongoDB, Thunder Client (VS Code extension), Android Studio with Flutter SDK, Arduino IDE and Git.
 
-Moreover, we would like to thank the authors who provided us with the assets used in our map marker icon, as well as the fonts used in application. 
-They are: [bsd](https://www.flaticon.com/authors/bsd), [meaicon](https://www.flaticon.com/authors/meaicon), [Freepik](https://www.freepik.com/), [Icongeek26](https://www.flaticon.com/authors/icongeek26), [Tart Workshop](https://www.tartworkshop.com/) and [Font Bureau](https://typenetwork.com/type-foundries/font-bureau/farewell-font-bureau).
+Moreover, we would like to thank the authors who provided us with the assets used in our map marker icon. 
+They are: [bsd](https://www.flaticon.com/authors/bsd), [meaicon](https://www.flaticon.com/authors/meaicon), [Freepik](https://www.freepik.com/), [Icongeek26](https://www.flaticon.com/authors/icongeek26).
 Your continuous support and dedication to open-source projects have made a significant impact on our work.

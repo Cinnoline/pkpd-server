@@ -205,10 +205,10 @@ router.post("/track", async (req, res) => {
     });
     await gpsData.save();
 
-    const requiredEntries = (4 * 60) / 1; // tracking every minute
+    const requiredEntries = (4 * 60) / 1 / 24; // tracking every minute !minute
     const stationaryThreshold = 100; // define stationary threshold (100m)
     // get time four hours ago
-    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+    const fourHoursAgo = new Date(Date.now() - (4 * 60 * 60 * 1000) / 24);
 
     // get all points within the last four hours
     const points = await GPSData.find({
@@ -238,7 +238,7 @@ router.post("/track", async (req, res) => {
 
       // determine whether the user is stationary in the last four hours
       if (maxDistance < stationaryThreshold) {
-        const emailInterval = 60 * 60 * 1000; // send an email hourly
+        const emailInterval = 60 * 1000; // send an email hourly !minute
         const now = Date.now();
         // if the user has been stationary for the first time in the last four hours
         if (!stationaryStartTimestamp) {
