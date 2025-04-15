@@ -206,7 +206,7 @@ function createWarningInfo(data) {
   let warningInfo = ``;
   data.details.forEach((detail) => {
     warningInfo += cleanText([...detail.contents]);
-    warningInfo += `\nUpdate Time: ${clean(detail.updateTime)}\n`;
+    warningInfo += `\nUpdate Time: ${cleanText(detail.updateTime)}\n`;
   });
   return addNewlinesByWord(warningInfo, 66);
 }
