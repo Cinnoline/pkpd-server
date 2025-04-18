@@ -6,11 +6,11 @@ import axios from "axios";
 import KMBStop from "../models/kmbStop.js";
 import GMBStop from "../models/gmbStop.js";
 import GMBRoute from "../models/gmbRoute.js";
-import generateMapUrl from "./map.js";
 
 // create a router
 const router = Router();
 
+// get the nearest several KMB bus stops' ETA
 router.get("/kmbStops/nearest", async (req, res) => {
   // test query
   // http://localhost:8880/transport/kmbStops/nearest?lat=22.345130521&long=114.158208553
@@ -118,6 +118,7 @@ router.get("/kmbStops/coordinates", async (req, res) => {
   }
 });
 
+// get the nearest several Green Minibus stops' ETA
 router.get("/gmbStops/nearest", async (req, res) => {
   // test query
   // http://localhost:8880/transport/gmbStops/nearest?lat=22.384522841&long=114.143778736

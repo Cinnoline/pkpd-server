@@ -4,7 +4,6 @@ import axios from "axios";
 import DistancePost from "../models/distancePosts.js";
 import WaterStation from "../models/waterStation.js";
 import BBQ from "../models/bbq.js";
-import generateMapUrl from "./map.js";
 
 // create a router
 const router = Router();
@@ -90,7 +89,7 @@ router.get("/waterStation/nearest", async (req, res) => {
   }
 });
 
-// get the nearest water filling station, only return the name, the coordinates and the distance
+// get the nearest water filling station, only return the name, the coordinates and the distance, used by map.js
 router.get("/waterStation/coordinates", async (req, res) => {
   const { lat, long, limit = 1 } = req.query;
   // test request: http://localhost:8880/facilities/waterStation/coordinates?lat=22.3738157&long=114.264019
@@ -136,6 +135,7 @@ router.get("/waterStation/coordinates", async (req, res) => {
   }
 });
 
+// get the nearest BBQ facility's coordinates, used by map.js
 router.get("/bbq/coordinates", async (req, res) => {
   const { lat, long } = req.query;
   try {
@@ -189,7 +189,6 @@ router.put("/distance_posts", async (req, res) => {
         REMARK: post.properties.REMARK,
       };
     });
-
     console.log(filteredPosts);
     await distancePostsSchema.insertMany(filteredPosts);
     console.log("Data saved successfully");

@@ -137,7 +137,7 @@ router.get("/placeName", async (req, res) => {
   }
 });
 
-// the code to get the latest GPS data from the database, used by Mobile App
+// the code to get the latest GPS data from the database
 router.get("/track", async (req, res) => {
   try {
     // Get the latest GPS data

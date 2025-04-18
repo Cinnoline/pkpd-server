@@ -1,13 +1,13 @@
 /** @format */
 
 import { Router } from "express";
-import mongoose from "mongoose";
 import axios from "axios";
 import WeatherStation from "../models/autoWeatherStation.js";
 
 // create a router
 const router = Router();
 
+// map the warning code to the icon name in url
 const warningCodeMap = {
   WFIREY: "firey",
   WFIRER: "firer",
@@ -118,7 +118,7 @@ router.get("/weather_report", async (req, res) => {
   }
 });
 
-// the router to get the weather report, used by the mobile application only
+// the router to get the weather report(in HTML)
 router.get("/weather_report_app", async (req, res) => {
   const { lat, long } = req.query;
   // test request:
@@ -208,7 +208,7 @@ function createWarningInfo(data) {
     warningInfo += [cleanText(...detail.contents)];
     warningInfo += "\n" + cleanText(`Update Time: ${detail.updateTime}`) + "\n";
   });
-  return addNewlinesByWord(warningInfo, 66);
+  return addNewlinesByWord(warningInfo, 70);
 }
 
 function createWarningIcon(data) {

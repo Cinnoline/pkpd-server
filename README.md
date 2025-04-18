@@ -1,7 +1,7 @@
 # pkpd-server
 
 ## Overview
-This project is the backend part of a project named Solo Hiker SmartSync System, which consists of hardware, mobile app and backend. It is developed with Express.js, Mongoose, as well as MongoDB. 
+This project is the backend part of a project named Solo Hiker SmartSync System, which consists of hardware, mobile app (unfinished due to time constaint) and backend. It is developed with Express.js, Mongoose, as well as MongoDB. 
 
 All API endpoints and data sets used come from the following two open data platforms:
 1. [DATA.GOV.HK](https://data.gov.hk/en/)
@@ -32,7 +32,7 @@ yarn add dotenv
 
 Use `npm start`, or `yarn start` to run the server.
 Express.js is normally run on Node.js. 
-Alternatively, [bun](https://bun.sh/) can run Express.js, you can change the `start` script in `package.json` file \
+Alternatively, [bun](https://bun.sh/) can run Express.js, you can change the `start` script in `package.json` file:\
 ```
   "scripts": {
     "start": "node app.js" // You can use bun if you prefer 
@@ -46,12 +46,18 @@ You can access the following endpoints:
 | ------------- |-------------|
 | /weather/weather_forecast | weather forecast  |
 | /weather/warning_info | warning information |
-| /weather/weather_report?lat=${latitude}&long=${longitude}| the weather report from the nearest weather station, as well as weather icons  |
+| /weather/weather_report?lat=${latitude}&long=${longitude}| the weather report from the nearest weather station, as well as weather icons, current latitude and longitude should be provided  |
+| /weather/weather_report_app?lat=${latitude}&long=${longitude}| the weather report (in HTML) from the nearest weather station, as well as weather icons, current latitude and longitude should be provided |
 | /weather/warning_sum | warning icon (in gif format) |
 | /facilities/waterStation/nearest?lat=${latitude}&long=${longitude} | nearest water filling station information(map and string), current latitude and longitude should be provided |
+| /facilities/waterStation/coordinates?lat=${latitude}&long=${longitude} | nearest water filling station information(only the name, the coordinates and the distance), current latitude and longitude should be provided, used by map.js only in our project |
+| /facilities/bbq/coordinates?lat=${latitude}&long=${longitude} | nearest BBQ facility's coordiantes, current latitude and longitude should be provided, only used by map.js |
 | /transport/kmbStops/nearest?lat=${latitude}&long=${longitude} | nearby KMB stops information (string), current latitude and longitude should be provided |
+| /transport/kmbStops/coordinates?lat=${latitude}&long=${longitude} | nearby KMB stops coordinates, current latitude and longitude should be provided, only used by map.js |
 | /transport/gmbStops/nearest?lat=${latitude}&long=${longitude} | nearby Green Minibus stops information (string), current latitude and longitude should be provided |
+| /transport/gmbStops/coordinates?lat=${latitude}&long=${longitude} | nearby Green Minibus stops coordinates, current latitude and longitude should be provided, only used by map.js |
 | /location/placeName?lat=${latitude}&long=${longitude} | nearby place name, current latitude and longitude should be provided |
+| /location/track | get the latest GPS data from the database |
 |/map?lat={latitude}&long={longitude}| the route to generate a map image URL with markers for the current location, KMB stops, GMB stops, water filling stations, and BBQ facilities|
 
 For example, you can access
@@ -65,7 +71,7 @@ and the following request should be by a **POST** with a **request body**:
 
 | Endpoints | Description |
 | ------------- |-------------|
-| /location/track | save track into DB |
+| /location/track | save track into DB, and handle the condition that the user stands stationary for too long |
 
 Request body example:
 
@@ -88,7 +94,7 @@ Additionally, we appreciate the data directly downloaded from their websites, wh
 
 We would also like to acknowledge the various libraries and tools that were essential in developing this project:
 - Libraries: mongoose, nodemailer, axios, node-cron and dotenv.
-- Tools: MongoDB, Thunder Client (VS Code extension), Android Studio with Flutter SDK, Arduino IDE and Git.
+- Tools: MongoDB, Thunder Client (VS Code extension), Arduino IDE and Git.
 
 Moreover, we would like to thank the authors who provided us with the assets used in our map marker icon. 
 They are: [bsd](https://www.flaticon.com/authors/bsd), [meaicon](https://www.flaticon.com/authors/meaicon), [Freepik](https://www.freepik.com/), [Icongeek26](https://www.flaticon.com/authors/icongeek26).
