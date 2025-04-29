@@ -32,7 +32,7 @@ yarn add dotenv
 
 Use `npm start`, or `yarn start` to run the server.
 Express.js is normally run on Node.js. 
-Alternatively, [bun](https://bun.sh/) can run Express.js, you can change the `start` script in `package.json` file:\
+Alternatively, [bun](https://bun.sh/) can run Express.js, you can change the `start` script in `package.json` file:
 ```
   "scripts": {
     "start": "node app.js" // You can use bun if you prefer 
