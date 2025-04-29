@@ -208,7 +208,7 @@ router.post("/track", async (req, res) => {
     const requiredEntries = (4 * 60) / 1; // tracking every minute
     const stationaryThreshold = 100; // define stationary threshold (100m)
     // get time four hours ago
-    const fourHoursAgo = new Date(Date.now() - (4 * 60 * 60 * 1000) / 24);
+    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
     // get all points within the last four hours
     const points = await GPSData.find({
